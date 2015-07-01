@@ -73,7 +73,7 @@
         <hr />
         <div id="process-form">
             <form action="index.html" class="form-horizontal register-form" enctype="multipart/form-data" id="register-form" method="post" role="form">
-                <input name="__RequestVerificationToken" type="hidden" value="tWwxNh3P0F0iIbngrjWV5eyjxPP5PsiC-_oB1rXTiPkEKJ--Z-v2AFy089a_LdvHzpS3We6GN_VeWBu2O4wkSXIrLQhyCaxoduBDTRbGZ_81" />    <!--uxSlide by developers-organism and Alim Ul Karim hides everything except for first item=0, we can have more than one zeros-->
+                <input name="__RequestVerificationToken" type="hidden" value="tWwxNh3P0F0iIbngrjWV5eyjxPP5PsiC-_oB1rXTiPkEKJ--Z-v2AFy089a_LdvHzpS3We6GN_VeWBu2O4wkSXIrLQhyCaxoduBDTRbGZ_81" />
                 <div data-dev-slide="0" data-dev-visited='false'>
                     <div class="form-group form-row username string-type" data-prop="username" data-is-validate="false">
                         <div class="controls dev-plugin">
@@ -95,7 +95,68 @@
                             </div>
                         </div>
                     </div>
-
+                    <div data-json-combo-plugin="true" class="form-group form-row countryid dropdown-dynamic-type dynamic-select-container" data-type="dropdown-dynamic" data-dynamic-select-container="true" data-prop="countryid">
+                        <div class="controls dev-plugin">
+                            <label data-progress-bar="true" data-prop="countryid">
+                                <a data-toggle="tooltip" title="" class="tooltip-show countryid no-hover" data-original-title="Requesting data...">
+                                    <span data-display="Country" class="countryid glyphicon glyphicon-refresh glyphicon-spin"></span>
+                                </a>
+                                Requesting data...
+                            </label>
+                            <div data-hidable="true" data-prop="countryid">
+                                <label data-prop="countryid" class="col-md-10 control-label" for="countryid">
+                                    Country
+                                    <span class="red">*</span>
+                                </label>
+                                <div class="col-md-10 select-holding-div select-dynamic-holding-div">
+                                    <div class="d-select-ip-countryid dynamic-select-load"
+                                         data-prop="countryid"
+                                         data-dev-dynamic-select="true"
+                                         data-url="Services/GetCountryID"
+                                         data-value=""
+                                         data-additional-css="btn-success"
+                                         data-live-search="true"
+                                         data-dependable="false"
+                                         data-dependable-prop-name="countryid"
+                                         data-id="CountryID"
+                                         data-is-selectpicker="true">
+                                    </div>
+                                    <a data-toggle="tooltip" data-original-title="Please select your exact country, it's going to verify against your IP." title="" class="tooltip-show"><span class="description-icon"></span></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-json-combo-plugin="true" class="form-group form-row countryid dropdown-dynamic-type dynamic-select-container" data-type="dropdown-dynamic" data-dynamic-select-container="true" data-prop="countryid">
+                        <div class="controls dev-plugin">
+                            <label data-progress-bar="true" data-prop="countryid">
+                                <a data-toggle="tooltip" title="" class="tooltip-show countryid no-hover" data-original-title="Requesting data...">
+                                    <span data-display="Country" class="countryid glyphicon glyphicon-refresh glyphicon-spin"></span>
+                                </a>
+                                Requesting data...
+                            </label>
+                            <div data-hidable="true" data-prop="countryid">
+                                <label data-prop="countryid" class="col-md-10 control-label" for="countryid">
+                                    Country
+                                    <span class="red">*</span>
+                                </label>
+                                <div class="col-md-10 select-holding-div select-dynamic-holding-div">
+                                    <div class="d-select-ip-countryid dynamic-select-load"
+                                         data-prop="countryid"
+                                         data-dev-dynamic-select="true"
+                                         data-url="Services/GetCountryID"
+                                         data-value=""
+                                         data-additional-css="btn-success"
+                                         data-live-search="true"
+                                         data-dependable="false"
+                                         data-dependable-prop-name="countryid"
+                                         data-id="CountryID"
+                                         data-is-selectpicker="true">
+                                    </div>
+                                    <a data-toggle="tooltip" data-original-title="Please select your exact country, it's going to verify against your IP." title="" class="tooltip-show"><span class="description-icon"></span></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div data-dev-slide="1" data-dev-visited='false'>
                     <div class="form-group form-row firstname string-type" data-prop="firstname" data-is-validate="false">
