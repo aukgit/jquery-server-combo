@@ -95,31 +95,34 @@
                             </div>
                         </div>
                     </div>
-                    <div data-json-combo-plugin="true" class="form-group form-row countryid dropdown-dynamic-type dynamic-select-container" data-type="dropdown-dynamic" data-dynamic-select-container="true" data-prop="countryid">
+                    <div data-json-combo-plugin="true"
+                         class="form-group form-combo form-row"
+                         data-prop="countryid" 
+                         data-name="countryid">
                         <div class="controls dev-plugin">
-                            <label data-progress-bar="true" data-prop="countryid">
-                                <a data-toggle="tooltip" title="" class="tooltip-show countryid no-hover" data-original-title="Requesting data...">
-                                    <span data-display="Country" class="countryid glyphicon glyphicon-refresh glyphicon-spin"></span>
-                                </a>
-                                Requesting data...
-                            </label>
                             <div data-hidable="true" data-prop="countryid">
                                 <label data-prop="countryid" class="col-md-10 control-label" for="countryid">
                                     Country
                                     <span class="red">*</span>
                                 </label>
-                                <div class="col-md-10 select-holding-div select-dynamic-holding-div">
-                                    <div class="d-select-ip-countryid dynamic-select-load"
-                                         data-prop="countryid"
+                                <div class="col-md-10 jq-server-combo-container">
+                                    <div class="jq-server-combo"
+                                         data-name="countryid"
+                                         data-placeholder="Select first..."
                                          data-dev-dynamic-select="true"
                                          data-url="Services/GetCountryID"
-                                         data-value=""
+                                         data-selected-value=""
+                                         data-regularexpression-valid=""
                                          data-additional-css="btn-success"
                                          data-live-search="true"
                                          data-dependable="false"
                                          data-dependable-prop-name="countryid"
-                                         data-id="CountryID"
-                                         data-is-selectpicker="true">
+                                         data-id="countryid"
+                                         data-page="true"
+                                         data-is-simple="true"
+                                         data-custom-html-format="false"
+                                         data-optimized="true"
+                                         data-tag="true">
                                     </div>
                                     <a data-toggle="tooltip" data-original-title="Please select your exact country, it's going to verify against your IP." title="" class="tooltip-show"><span class="description-icon"></span></a>
                                 </div>

@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="SampleDbModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="Category">
+    <Key>
+      <PropertyRef Name="CategoryID" />
+    </Key>
+    <Property Name="CategoryID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="CategoryDisplay" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <NavigationProperty Name="Employees" Relationship="Self.FK_Employee_Category" FromRole="Category" ToRole="Employee" />
+  </EntityType>
+  <EntityType Name="Client">
+    <Key>
+      <PropertyRef Name="ClientID" />
+    </Key>
+    <Property Name="ClientID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="FirstName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="LastName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Phone" Type="String" MaxLength="30" FixedLength="false" Unicode="false" Nullable="false" />
+    <NavigationProperty Name="Solds" Relationship="Self.FK_Sold_Client" FromRole="Client" ToRole="Sold" />
+  </EntityType>
+  <EntityType Name="COG">
+    <Key>
+      <PropertyRef Name="COGID" />
+    </Key>
+    <Property Name="COGID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="EmployeeID" Type="Int64" Nullable="false" />
+    <Property Name="ProductID" Type="Int64" Nullable="false" />
+    <Property Name="Price" Type="Decimal" Precision="16" Scale="2" Nullable="false" />
+    <NavigationProperty Name="Employee" Relationship="Self.FK_COG_Employee" FromRole="COG" ToRole="Employee" />
+    <NavigationProperty Name="Product" Relationship="Self.FK_COG_Product" FromRole="COG" ToRole="Product" />
+    <NavigationProperty Name="Solds" Relationship="Self.FK_Sold_COG" FromRole="COG" ToRole="Sold" />
+  </EntityType>
+  <EntityType Name="Employee">
+    <Key>
+      <PropertyRef Name="EmployeeID" />
+    </Key>
+    <Property Name="EmployeeID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="FirstName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="LastName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="DateOfBirth" Type="DateTime" Precision="0" />
+    <Property Name="CategoryID" Type="Int32" Nullable="false" />
+    <NavigationProperty Name="Category" Relationship="Self.FK_Employee_Category" FromRole="Employee" ToRole="Category" />
+    <NavigationProperty Name="COGs" Relationship="Self.FK_COG_Employee" FromRole="Employee" ToRole="COG" />
+  </EntityType>
+  <EntityType Name="Product">
+    <Key>
+      <PropertyRef Name="ProductID" />
+    </Key>
+    <Property Name="ProductID" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="ProductName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+    <Property Name="Dated" Type="DateTime" Nullable="false" Precision="0" />
+    <NavigationProperty Name="COGs" Relationship="Self.FK_COG_Product" FromRole="Product" ToRole="COG" />
+    <NavigationProperty Name="Solds" Relationship="Self.FK_Sold_Product" FromRole="Product" ToRole="Sold" />
+  </EntityType>
+  <EntityType Name="Sold">
+    <Key>
+      <PropertyRef Name="SoldID" />
+    </Key>
+    <Property Name="SoldID" Type="Int64" Nullable="false" />
+    <Property Name="ProductID" Type="Int64" Nullable="false" />
+    <Property Name="COGID" Type="Int64" Nullable="false" />
+    <Property Name="ClientID" Type="Int64" Nullable="false" />
+    <Property Name="Dated" Type="DateTime" Nullable="false" Precision="0" />
+    <Property Name="Price" Type="Decimal" Precision="16" Scale="2" Nullable="false" />
+    <NavigationProperty Name="Client" Relationship="Self.FK_Sold_Client" FromRole="Sold" ToRole="Client" />
+    <NavigationProperty Name="COG" Relationship="Self.FK_Sold_COG" FromRole="Sold" ToRole="COG" />
+    <NavigationProperty Name="Product" Relationship="Self.FK_Sold_Product" FromRole="Sold" ToRole="Product" />
+  </EntityType>
+  <EntityType Name="sysdiagram">
+    <Key>
+      <PropertyRef Name="diagram_id" />
+    </Key>
+    <Property Name="name" Type="String" MaxLength="128" FixedLength="false" Unicode="true" Nullable="false" />
+    <Property Name="principal_id" Type="Int32" Nullable="false" />
+    <Property Name="diagram_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="version" Type="Int32" />
+    <Property Name="definition" Type="Binary" MaxLength="Max" FixedLength="false" />
+  </EntityType>
+  <Association Name="FK_Employee_Category">
+    <End Role="Category" Type="Self.Category" Multiplicity="1" />
+    <End Role="Employee" Type="Self.Employee" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Category">
+        <PropertyRef Name="CategoryID" />
+      </Principal>
+      <Dependent Role="Employee">
+        <PropertyRef Name="CategoryID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Sold_Client">
+    <End Role="Client" Type="Self.Client" Multiplicity="1" />
+    <End Role="Sold" Type="Self.Sold" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Client">
+        <PropertyRef Name="ClientID" />
+      </Principal>
+      <Dependent Role="Sold">
+        <PropertyRef Name="ClientID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_COG_Employee">
+    <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+    <End Role="COG" Type="Self.COG" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Employee">
+        <PropertyRef Name="EmployeeID" />
+      </Principal>
+      <Dependent Role="COG">
+        <PropertyRef Name="EmployeeID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_COG_Product">
+    <End Role="Product" Type="Self.Product" Multiplicity="1" />
+    <End Role="COG" Type="Self.COG" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Product">
+        <PropertyRef Name="ProductID" />
+      </Principal>
+      <Dependent Role="COG">
+        <PropertyRef Name="ProductID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Sold_COG">
+    <End Role="COG" Type="Self.COG" Multiplicity="1" />
+    <End Role="Sold" Type="Self.Sold" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="COG">
+        <PropertyRef Name="COGID" />
+      </Principal>
+      <Dependent Role="Sold">
+        <PropertyRef Name="COGID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK_Sold_Product">
+    <End Role="Product" Type="Self.Product" Multiplicity="1" />
+    <End Role="Sold" Type="Self.Sold" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Product">
+        <PropertyRef Name="ProductID" />
+      </Principal>
+      <Dependent Role="Sold">
+        <PropertyRef Name="ProductID" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="SampleDbEntities" annotation:LazyLoadingEnabled="false">
+    <EntitySet Name="Categories" EntityType="Self.Category" />
+    <EntitySet Name="Clients" EntityType="Self.Client" />
+    <EntitySet Name="COGs" EntityType="Self.COG" />
+    <EntitySet Name="Employees" EntityType="Self.Employee" />
+    <EntitySet Name="Products" EntityType="Self.Product" />
+    <EntitySet Name="Solds" EntityType="Self.Sold" />
+    <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagram" />
+    <AssociationSet Name="FK_Employee_Category" Association="Self.FK_Employee_Category">
+      <End Role="Category" EntitySet="Categories" />
+      <End Role="Employee" EntitySet="Employees" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Sold_Client" Association="Self.FK_Sold_Client">
+      <End Role="Client" EntitySet="Clients" />
+      <End Role="Sold" EntitySet="Solds" />
+    </AssociationSet>
+    <AssociationSet Name="FK_COG_Employee" Association="Self.FK_COG_Employee">
+      <End Role="Employee" EntitySet="Employees" />
+      <End Role="COG" EntitySet="COGs" />
+    </AssociationSet>
+    <AssociationSet Name="FK_COG_Product" Association="Self.FK_COG_Product">
+      <End Role="Product" EntitySet="Products" />
+      <End Role="COG" EntitySet="COGs" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Sold_COG" Association="Self.FK_Sold_COG">
+      <End Role="COG" EntitySet="COGs" />
+      <End Role="Sold" EntitySet="Solds" />
+    </AssociationSet>
+    <AssociationSet Name="FK_Sold_Product" Association="Self.FK_Sold_Product">
+      <End Role="Product" EntitySet="Products" />
+      <End Role="Sold" EntitySet="Solds" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

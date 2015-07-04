@@ -11,6 +11,7 @@
  * Copyright (c) 2015 by 
  * Md. Alim Ul Karim, 
  * Software Engineer at Enosis Solutions,
+ * CSE, North South University 
  * Bangladesh, Dhaka.
  * me{at}alimkarim.com
  *
@@ -21,8 +22,6 @@
  */
 
 ;
-
-
 
 (function ($, window, document, undefined) {
 
