@@ -5,17 +5,19 @@
 /// <reference path="jquery.validate.min.js" />
 /// <reference path="jquery.validate.unobtrusive.js" />
 /*!
- * jQuery Server Validate 1.0 
+ * jQuery Server ComboBox 1.0 
  * (a plugin for ASP.NET MVC or any server side programming language)
  * 
  * Copyright (c) 2015 by 
- * Md. Alim Ul Karim, Bangladesh, Dhaka.
+ * Md. Alim Ul Karim, 
+ * Software Engineer at Enosis Solutions,
+ * Bangladesh, Dhaka.
  * me{at}alimkarim.com
  *
- * Performance test http://jsperf.com/jquery-specific-performance-test-with-non-specific
  * by Md. Alim Ul karim 
- * Date: 19 June 2015
- * Modified Date: 27 June 2015
+ * 
+ * Date         : 04 Jul 2015
+ * Modified Date: 04 Jul 2015
  */
 
 ;
@@ -26,12 +28,12 @@
 
     "use strict";
     if (typeof jQuery === 'undefined') {
-        throw new Error('serverValidate requires jQuery');
+        throw new Error('serverComboBox requires jQuery');
     }
     if (typeof jQuery.validator === "undefined") {
-        throw new Error('serverValidate requires jQuery validation plugin & jquery.validate.unobtrusive plugin.');
+        throw new Error('serverComboBox requires jQuery validation plugin & jquery.validate.unobtrusive plugin.');
     }
-    var pluginName = "serverValidate",
+    var pluginName = "serverComboBox",
         $divContainers,
         settings,
         additionalFields,
@@ -48,7 +50,7 @@
                 requesting: "Requesting data..."
             },
             selectors: {
-                divContainer: ".form-row",
+                divContainer: ".form-combobox",
                 validatorContainer: ".validator-container",
                 validator: ".validator",
                 additionalFields: [
@@ -107,7 +109,7 @@
 
     function processAdditionalFields($elementContainer) {
         var addFields = [];
-        var selectors = window.settings.selectors.additionalFields;
+        var selectors = $elementContainer.settings.selectors.additionalFields;
         for (var i = 0; i < selectors.length; i++) {
             var selector = selectors[i];
             var $element = $elementContainer.find(selector);
@@ -136,37 +138,43 @@
             }
         },
         getSettings: function () {
-            return window.settings;
+            return $selfContainer.settings;
         },
         isMultipleRequestAllowed: function () {
-            return this.getSettings().multipleRequests;
+            return $selfContainer.settings.multipleRequests;
         },
         isDisableInputOnValidation: function () {
-            return this.getSettings().disableInputOnValidation;
+            return $selfContainer.settings.disableInputOnValidation;
         },
         isInputValidationRequirestoSendRequest: function () {
-            return this.getSettings().checkValidationBeforeSendingRequest;
+            return $selfContainer.settings.checkValidationBeforeSendingRequest;
         },
         dontSendSameRequestTwice: function () {
-            return this.getSettings().dontSendSameRequestTwice;
+            return $selfContainer.settings.dontSendSameRequestTwice;
         },
         getAttributes: function () {
-            return this.getSettings().attributes;
+            var $self = $selfContainer;
+            return $self.settings.attributes;
         },
         getEvents: function () {
-            return this.getSettings().events;
+            var $self = $selfContainer;
+            return $self.settings.events;
         },
         getIcons: function () {
-            return this.getSettings().icons;
+            var $self = $selfContainer;
+            return $self.settings.icons;
         },
         getIdPrefixes: function () {
-            return this.getSettings().iconsIdPrefixes;
+            var $self = $selfContainer;
+            return $self.settings.iconsIdPrefixes;
         },
         getSelectors: function () {
-            return this.getSettings().selectors;
+            var $self = $selfContainer;
+            return $self.settings.selectors;
         },
         getMessages: function () {
-            return this.getSettings().messages;
+            var $self = $selfContainer;
+            return $self.settings.messages;
         },
         isValidForProcessing: function ($div) {
             /// <summary>
@@ -290,7 +298,7 @@
             }
         },
         concatAdditionalFields: function ($input) {
-            var addFields = window.additionalFields.slice();
+            var addFields = $selfContainer.additionalFields.slice();
             var fields = {
                 name: $input.attr("name"),
                 value: $input.val()
@@ -304,7 +312,7 @@
             /// </summary>
             /// <param name="$div"></param>
             /// <returns type=""></returns>
-            var attrs = this.getSettings().attributes;
+            var attrs = $selfContainer.settings.attributes;
             return $input.attr(attrs.submitMethod);
         },
         abortPreviousAjaxRequest: function ($input) {
@@ -694,7 +702,7 @@
 
     // A really lightweight plugin wrapper around the constructor,
     // preventing against multiple instantiations
-    $.fn.serverValidate = function (options) {
+    $.fn.serverComboBox = function (options) {
         /// <summary>
         /// expecting a container which contains divs
         /// of .form-row and inside there is a input with
@@ -705,16 +713,14 @@
         var $elementContainer = this;
         $selfContainer = this;
         if ($elementContainer.isInit !== true) {
-            window.settings = $.extend({}, defaults, options);
-            var selectors = window.settings.selectors;
-            window.$divContainers = $elementContainer.find(selectors.divContainer);
-            window.additionalFields = processAdditionalFields($elementContainer);
+            this.settings = $.extend({}, defaults, options);
+            var selectors = this.settings.selectors;
+            this.$divContainers = $elementContainer.find(selectors.divContainer);
+            this.additionalFields = processAdditionalFields($elementContainer);
+            this.isInit = true;
         }
-
-        var $containers = window.$divContainers;
-
-        for (var i = 0; i < $containers.length; i++) {
-            var $divElement = $($containers[i]);
+        for (var i = 0; i < this.$divContainers.length; i++) {
+            var $divElement = $(this.$divContainers[i]);
             new plugin($divElement, options);
         }
     };
