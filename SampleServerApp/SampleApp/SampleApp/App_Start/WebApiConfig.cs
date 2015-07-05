@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web.Http;
+﻿using System.Web.Http;
 using System.Web.Http.OData.Builder;
 using System.Web.Http.OData.Extensions;
 using SampleApp.Models;
@@ -20,11 +17,15 @@ namespace SampleApp
                 defaults: new { id = RouteParameter.Optional }
             );
 
-            //ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
-            //builder.EntitySet<Product>("ProductsOData");
-            //builder.EntitySet<COG>("COGs");
-            //builder.EntitySet<Sold>("Solds");
-            //config.Routes.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
+
+
+            ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
+            builder.EntitySet<Product>("ProductsOData");
+            builder.EntitySet<Employee>("Employees");
+            builder.EntitySet<Category>("Categories"); 
+            builder.EntitySet<COG>("COGs");
+            builder.EntitySet<Sold>("Solds");
+            config.Routes.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
         }
     }
 }

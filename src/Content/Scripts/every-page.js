@@ -4,8 +4,8 @@
 /// <reference path="every-page.js" />
 /// <reference path="jquery-2.1.4-vsdoc.js" />
 /// <reference path="jquery-2.1.4.js" />
-/// <reference path="jquery.server-validate.js" />
 /// <reference path="jquery.unobtrusive-ajax.min.js" />
+/// <reference path="jquery.server-combo.js" />
 /// <reference path="jquery.validate.min.js" />
 /// <reference path="moment.js" />
 /*!
@@ -69,114 +69,9 @@ $.genericPage = function() {
     var $formRows = $processForm.find(".form-row");
 
     $formRows.attr("data-is-validate", "true");
+    $processForm.serverValidate();
 
-    $processForm.serverValidate({
-        crossDomain: true,
-        multipleRequests: true,
-        checkValidationBeforeSendingRequest: true,
-        dontSendSameRequestTwice: true,
-        disableInputOnValidation: true,
-        focusPersistIfNotValid: true,
-        hideOnValidation: false,
-        messages: {
-            requesting: "Requesting data Renamed..."
-        },
-        selectors: {
-            divContainer: ".form-row",
-            validatorContainer: ".validator-container",
-            validator: ".validator",
-            additionalFields: [
-                "[name=__RequestVerificationToken]"
-            ]
-        },
-        attributes: {
-            url: "data-url",
-            isValidate: "data-is-validate",
-            submitMethod: "data-submit-method"
-        },
-        icons: {
-            invalid: "validation-icon-invalid fa fa-times",
-            valid: "validation-icon-valid fa fa-check",
-            spinner: "validation-icon-spinner fa fa-refresh fa-spin-custom",
-            error: "validation-icon-error fa fa-exclamation-circle"
-        },
-        iconsIdPrefixes: {
-            invalid: "invalid-mark-",
-            valid: "valid-mark-",
-            spinner: "validation-spinner-",
-            error: "validation-error-"
-        },
-        response: {
-            message: "Field is valid.",
-            isValid: true,
-            isError: false,
-            errorCode: null,
-            errorMessage: null
-        },
-        events: {
-            iconCreated: function($div, $input, $iconContainer) {
-                console.log("iconCreated");
-                console.log($div);
-                console.log($input);
-                console.log($iconContainer);
-            },
-            sameRequestTwice: function($div, $input, url) {
-                console.log("sameRequestTwice");
-                console.log($div);
-                console.log($input);
-                console.log(url);
-            },
-            beforeSendingRequest: function($div, $input, url) {
-                console.log("beforeSendingRequest");
-                console.log($div);
-                console.log($input);
-                console.log(url);
-            },
-            responseReceived: function($div, $input, response) {
-                console.log("responseReceived");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            responseProcessed: function($div, $input, response) {
-                console.log("responseProcessed");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            invalidBefore: function($div, $input, response) {
-                console.log("invalidBefore");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            invalidAfter: function($div, $input, response) {
-                console.log("invalidAfter");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            validBefore: function($div, $input, response) {
-                console.log("validBefore");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            validAfter: function($div, $input, response) {
-                console.log("validAfter");
-                console.log($div);
-                console.log($input);
-                console.log(response);
-            },
-            onError: function($div, $input, jqXHR, textStatus, exceptionMessage, url) {
-                console.log("onError");
-                console.log($div);
-                console.log($input);
-                console.log(jqXHR);
-                console.log(url);
-            }
-        }
-    });
+    $processForm.serverComboBox();
 
 
 

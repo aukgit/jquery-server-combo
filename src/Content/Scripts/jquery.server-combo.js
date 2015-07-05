@@ -21,9 +21,7 @@
  * Modified Date: 04 Jul 2015
  */
 
-;
-
-(function ($, window, document, undefined) {
+;(function ($, window, document, undefined) {
 
     "use strict";
     if (typeof jQuery === 'undefined') {
@@ -33,10 +31,26 @@
         throw new Error('serverComboBox requires jQuery validation plugin & jquery.validate.unobtrusive plugin.');
     }
     var pluginName = "serverComboBox",
-        $divContainers,
-        settings,
-        additionalFields,
         $selfContainer = null,
+        KEYS = {
+            BACKSPACE: 8,
+            TAB: 9,
+            ENTER: 13,
+            SHIFT: 16,
+            CTRL: 17,
+            ALT: 18,
+            ESC: 27,
+            SPACE: 32,
+            PAGE_UP: 33,
+            PAGE_DOWN: 34,
+            END: 35,
+            HOME: 36,
+            LEFT: 37,
+            UP: 38,
+            RIGHT: 39,
+            DOWN: 40,
+            DELETE: 46
+        },
         defaults = {
             crossDomain: true,
             multipleRequests: true,
@@ -45,11 +59,44 @@
             disableInputOnValidation: true,
             focusPersistIfNotValid: true,
             hideOnValidation: false,
+            isTag: false,
+            isLiveSearch: false,
+            isOdata: false,
+            isPaged: false,
+            pageSize: 30,
+            totalItemsFound: 0,
+            currentPage : 1,
+            maxDisplayItems: 10,
+            displayField: "display",
+            searchingField: "display",
+            valueField: "id",
+            selectsFistOneByDefault: true,
+            url: "",
+            nextPageUrl: "?Page=@pageNumber",
+            inMobileSelfUI: false,
+            isOptimized: true,
+            isDynamicLoad: true,
+            additionalCSS: "",
+            singleItemClass: "",
+            isDependableCombo: true,
+            dependablePropertyName: "",
+            inputValidationRegularExpression: "",
+            oDataRelationsList : [],
+            searchType: {
+                startsWith : true,
+                contains : false,
+                equal: false,
+                notEqual: false,
+                custom: ""
+            },
             messages: {
                 requesting: "Requesting data..."
             },
             selectors: {
-                divContainer: ".form-combobox",
+                label: ".jq-server-combo-label",
+                comboImplement: ".jq-server-combo-implement",
+
+                divContainer: ".form-combo",
                 validatorContainer: ".validator-container",
                 validator: ".validator",
                 additionalFields: [
@@ -101,6 +148,7 @@
         /// </summary>
         /// <param name="element"></param>
         /// <returns type=""></returns>
+        $divElement.hide();
         this.$element = $divElement;
         this._name = pluginName;
         this.init($divElement);
@@ -108,7 +156,7 @@
 
     function processAdditionalFields($elementContainer) {
         var addFields = [];
-        var selectors = $elementContainer.settings.selectors.additionalFields;
+        var selectors = window.settings.selectors.additionalFields;
         for (var i = 0; i < selectors.length; i++) {
             var selector = selectors[i];
             var $element = $elementContainer.find(selector);
@@ -137,43 +185,37 @@
             }
         },
         getSettings: function () {
-            return $selfContainer.settings;
+            return window.settings;
         },
         isMultipleRequestAllowed: function () {
-            return $selfContainer.settings.multipleRequests;
+            return this.getSettings().multipleRequests;
         },
         isDisableInputOnValidation: function () {
-            return $selfContainer.settings.disableInputOnValidation;
+            return this.getSettings().disableInputOnValidation;
         },
         isInputValidationRequirestoSendRequest: function () {
-            return $selfContainer.settings.checkValidationBeforeSendingRequest;
+            return this.getSettings().checkValidationBeforeSendingRequest;
         },
         dontSendSameRequestTwice: function () {
-            return $selfContainer.settings.dontSendSameRequestTwice;
+            return this.getSettings().dontSendSameRequestTwice;
         },
         getAttributes: function () {
-            var $self = $selfContainer;
-            return $self.settings.attributes;
+            return this.getSettings().attributes;
         },
         getEvents: function () {
-            var $self = $selfContainer;
-            return $self.settings.events;
+            return this.getSettings().events;
         },
         getIcons: function () {
-            var $self = $selfContainer;
-            return $self.settings.icons;
+            return this.getSettings().icons;
         },
         getIdPrefixes: function () {
-            var $self = $selfContainer;
-            return $self.settings.iconsIdPrefixes;
+            return this.getSettings().iconsIdPrefixes;
         },
         getSelectors: function () {
-            var $self = $selfContainer;
-            return $self.settings.selectors;
+            return this.getSettings().selectors;
         },
         getMessages: function () {
-            var $self = $selfContainer;
-            return $self.settings.messages;
+            return this.getSettings().messages;
         },
         isValidForProcessing: function ($div) {
             /// <summary>
@@ -297,7 +339,7 @@
             }
         },
         concatAdditionalFields: function ($input) {
-            var addFields = $selfContainer.additionalFields.slice();
+            var addFields = window.additionalFields.slice();
             var fields = {
                 name: $input.attr("name"),
                 value: $input.val()
@@ -311,7 +353,7 @@
             /// </summary>
             /// <param name="$div"></param>
             /// <returns type=""></returns>
-            var attrs = $selfContainer.settings.attributes;
+            var attrs = this.getSettings().attributes;
             return $input.attr(attrs.submitMethod);
         },
         abortPreviousAjaxRequest: function ($input) {
@@ -712,14 +754,16 @@
         var $elementContainer = this;
         $selfContainer = this;
         if ($elementContainer.isInit !== true) {
-            this.settings = $.extend({}, defaults, options);
-            var selectors = this.settings.selectors;
-            this.$divContainers = $elementContainer.find(selectors.divContainer);
-            this.additionalFields = processAdditionalFields($elementContainer);
-            this.isInit = true;
+            window.settings = $.extend({}, defaults, options);
+            var selectors = window.settings.selectors;
+            window.$divContainers = $elementContainer.find(selectors.divContainer);
+            window.additionalFields = processAdditionalFields($elementContainer);
         }
-        for (var i = 0; i < this.$divContainers.length; i++) {
-            var $divElement = $(this.$divContainers[i]);
+
+        var $containers = window.$divContainers;
+
+        for (var i = 0; i < $containers.length; i++) {
+            var $divElement = $($containers[i]);
             new plugin($divElement, options);
         }
     };
