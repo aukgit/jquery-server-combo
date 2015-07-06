@@ -21,7 +21,7 @@
  * Modified Date: 04 Jul 2015
  */
 
-;(function ($, window, document, undefined) {
+; (function ($, window, document, undefined) {
 
     "use strict";
     if (typeof jQuery === 'undefined') {
@@ -53,38 +53,50 @@
         },
         defaults = {
             crossDomain: true,
+            // send request while on request is already being processing.
             multipleRequests: true,
             checkValidationBeforeSendingRequest: true,
             dontSendSameRequestTwice: true,
             disableInputOnValidation: true,
             focusPersistIfNotValid: true,
             hideOnValidation: false,
+            placeHolder: "",
+            placeHolderValue: "",
+            placeHolderDisable: false,
+            isDynamicLoad:true,
             isTag: false,
             isLiveSearch: false,
             isOdata: false,
-            isPaged: false,
+            isOdataPagefromServer: true,
+            isMultipleSelect: true,
+            isRequired: true,
+            oDataRelationsList: [],
+            isPaginationEnable: false,
             pageSize: 30,
-            totalItemsFound: 0,
-            currentPage : 1,
+            totalItemsCountOnServer: 0,
+            currentPage: 1,
             maxDisplayItems: 10,
             displayField: "display",
             searchingField: "display",
             valueField: "id",
+            valueSelect: "",
             selectsFistOneByDefault: true,
             url: "",
+            delay: 250,
             nextPageUrl: "?Page=@pageNumber",
             inMobileSelfUI: false,
             isOptimized: true,
-            isDynamicLoad: true,
             additionalCSS: "",
             singleItemClass: "",
             isDependableCombo: true,
             dependablePropertyName: "",
             inputValidationRegularExpression: "",
-            oDataRelationsList : [],
+            elementCreatingId: "",
+            elementName: "",
+            isCustomHtml: true,
             searchType: {
-                startsWith : true,
-                contains : false,
+                startsWith: true,
+                contains: false,
                 equal: false,
                 notEqual: false,
                 custom: ""
@@ -95,10 +107,7 @@
             selectors: {
                 label: ".jq-server-combo-label",
                 comboImplement: ".jq-server-combo-implement",
-
                 divContainer: ".form-combo",
-                validatorContainer: ".validator-container",
-                validator: ".validator",
                 additionalFields: [
                     "[name=__RequestVerificationToken]"
                 ]
@@ -106,13 +115,24 @@
             attributes: {
                 url: "data-url",
                 isValidate: "data-is-validate",
-                submitMethod: "data-submit-method"
+                submitMethod: "data-submit-method",
+                propertyFieldName: "data-name"
             },
             icons: {
                 invalid: "validation-icon-invalid fa fa-times",
                 valid: "validation-icon-valid fa fa-check",
                 spinner: "validation-icon-spinner fa fa-refresh fa-spin-custom",
                 error: "validation-icon-error fa fa-exclamation-circle"
+            },
+            cssClass: {
+                input: "jq-input",
+                inputHover: "jq-combo-hover",
+                comboHidden: "jq-combo-hidden",
+                combo: "jq-combo",
+                comboOpen: "jq-combo-open",
+                comboHover: "jq-combo-hover",
+                styleSetName: "default",
+                listItem: "jq-list-item"
             },
             iconsIdPrefixes: {
                 invalid: "invalid-mark-",
@@ -142,13 +162,15 @@
         };
 
     // The actual plugin constructor
-    function plugin($divElement) {
+    function plugin($divElement,options) {
         /// <summary>
         /// Process the div element and 
         /// </summary>
         /// <param name="element"></param>
         /// <returns type=""></returns>
         $divElement.hide();
+        this.settings = options;
+
         this.$element = $divElement;
         this._name = pluginName;
         this.init($divElement);
@@ -173,19 +195,86 @@
         return addFields;
     }
 
+    function getSingleSettingItem($div, attribute, settingElement) {
+        var value = $div.attr(attribute);
+        if (value !== undefined && value !== null) {
+            if (value === "true") {
+                return true;
+            } else if (value === "false") {
+                return false;
+            }
+            return value;
+        } else {
+            return settingElement;
+        }
+    }
+
+    function getSettingfromDiv($div, settings) {
+        /// <summary>
+        /// Pass settings and it's got overwritten by $div attributes
+        /// </summary>
+        /// <param name="$div"></param>
+        /// <returns type="setting">returns settings</returns>
+        var crossMatch = [
+            { setting: "crossDomain", attr: "data-cross-domain" },
+            { setting: "placeHolder", attr: "data-placeholder" },
+            { setting: "placeHolderValue",attr: "data-placeholder-value" },
+            { setting: "placeHolderDisable", attr: "data-placeholder-disable" },
+            { setting: "isDynamicLoad", attr: "data-dynamic-load" },
+            { setting: "url", attr: "data-url" },
+            { setting: "nextPageUrl", attr: "data-next-page-url"},
+            { setting: "inMobileSelfUI", attr: "data-mobile-self-ui"},
+            { setting: "maxDisplayItems",attr: "data-max-search-item-display"},
+            { setting: "isOdata", attr: "data-odata"},
+            { setting: "isOdataPagefromServer",attr: "data-odata-is-paged-from-server"},
+            { setting: "delay", attr: "data-is-keypress-delay"},
+            { setting: "additionalCSS", attr: "data-additional-css" },
+            { setting: "isLiveSearch", attr: "data-live-search" },
+            { setting: "isDependableCombo", attr: "data-dependable" },
+            { setting: "dependablePropertyName", attr: "data-dependable-prop-name" },
+            { setting: "inputValidationRegularExpression", attr: "data-regularexpression-valid" },
+            { setting: "valueSelect", attr: "data-selected-value" },
+            { setting: "isMultipleSelect", attr: "data-is-multiple" },
+            { setting: "isRequired", attr: "data-is-required" },
+            { setting: "elementCreatingId", attr: "data-id" },
+            { setting: "displayField", attr: "data-display-field" },
+            { setting: "searchingField", attr: "data-searching-field" },
+            { setting: "isDependableCombo", attr: "data-value-field" },
+            { setting: "valueField", attr: "data-dependable" },
+            { setting: "elementName", attr: "data-name" },
+            { setting: "isPaginationEnable", attr: "data-pagination" },
+            { setting: "totalItemsCountOnServer", attr: "data-total-items-count" },
+            { setting: "currentPage", attr: "data-current-page" },
+            { setting: "pageSize", attr: "data-page-size" },
+            { setting: "isCustomHtml", attr: "data-custom-html-format" },
+            { setting: "isOptimized", attr: "data-optimized" },
+            { setting: "isTag", attr: "data-tag" }
+        ];
+        for (var i = 0; i < crossMatch.length; i++) {
+            var config = crossMatch[i];
+            settings[config.setting] = getSingleSettingItem($div, config.attr, settings[config.setting]);
+        }
+        settings.messages.requesting = getSingleSettingItem($div, "data-requesting-label", settings.messages.requesting);
+
+        return settings;
+    }
+
     // Avoid Plugin.prototype conflicts
     $.extend(plugin.prototype, {
         isDebugging: false,
         isEmpty: function (variable) {
             return variable === null || variable === undefined || variable.length === 0;
         },
+
         init: function ($divElement) {
-            if (this.isValidForProcessing($divElement)) {
-                this.processDiv($divElement);
-            }
+            var selectors = this.getSettings();
+
+            this.$implement = $divElement.find(selectors.comboImplement);
+
+            this.processDiv($divElement);
         },
         getSettings: function () {
-            return window.settings;
+            return this.settings;
         },
         isMultipleRequestAllowed: function () {
             return this.getSettings().multipleRequests;
@@ -217,17 +306,7 @@
         getMessages: function () {
             return this.getSettings().messages;
         },
-        isValidForProcessing: function ($div) {
-            /// <summary>
-            /// if it is valid for processing
-            /// </summary>
-            /// <param name="$div"></param>
-            /// <returns type=""></returns>
-
-            var attrs = this.getAttributes();
-            return $div.attr(attrs.isValidate) === "true";
-        },
-        getInput: function () {
+        getInputOrCreate: function () {
             if (this.isEmpty(this.$input)) {
                 var $div = this.$element;
                 this.$input = $div.find("input");
@@ -236,12 +315,12 @@
         },
         getUrl: function () {
             var attrs = this.getAttributes(),
-                $input = this.getInput();
+                $input = this.getInputOrCreate();
             return $input.attr(attrs.url);
         },
         processDiv: function ($div) {
             //var $self = $selfContainer;
-            var $input = this.getInput($div),
+            var $input = this.getInputOrCreate($div),
                 url = this.getUrl();
             //this.test();
             this.inputProcessWithBlurEvent($div, $input, url);
@@ -275,52 +354,56 @@
             }
             return returnStatement;
         },
+        createInput: function () {
+
+        },
+
         inputProcessWithBlurEvent: function ($div, $input, url) {
             var self = this,
                 settings = this.getSettings(),
                 isIconsVisible = true;
-            $input.on("blur", function (evt) {
-                self.blurEvent(evt, $div, self, $input, url);
-                isIconsVisible = true;
-            });
-            $input.on("keypress", function () {
-                if (isIconsVisible === true) {
-                    $div.removeAttr("data-icon-added");
-                    self.hideInvalidIcon($input);
-                    self.hideSpinner($input);
-                    self.hideErrorIcon($input);
-                    self.hideErrorIcon($input);
-                    self.hideValidIcon($input);
-                    isIconsVisible = false;
-                }
-            });
+            //$input.on("blur", function (evt) {
+            //    self.blurEvent(evt, $div, self, $input, url);
+            //    isIconsVisible = true;
+            //});
+            //$input.on("keypress", function () {
+            //    if (isIconsVisible === true) {
+            //        $div.removeAttr("data-icon-added");
+            //        self.hideInvalidIcon($input);
+            //        self.hideSpinner($input);
+            //        self.hideErrorIcon($input);
+            //        self.hideErrorIcon($input);
+            //        self.hideValidIcon($input);
+            //        isIconsVisible = false;
+            //    }
+            //});
         },
         blurEvent: function (event, $div, self, $input, url) {
-            var isRequstValid = !self.isInProcessingMode($div) || self.isMultipleRequestAllowed();
-            // if we are allowing to send multiple request while one is already being processing in the server.
-            if (isRequstValid) {
-                var $inputNew = $input;///$(this);
-                var isDuplicateRequestAllowed = self.dontSendSameRequestTwice() && !self.isPreviousRequestIsSame($div, $inputNew, url);
-                isRequstValid = isDuplicateRequestAllowed || !self.dontSendSameRequestTwice();
-                // check if same request is allowed to send twice.
-                if (isRequstValid) {
+            //var isRequstValid = !self.isInProcessingMode($div) || self.isMultipleRequestAllowed();
+            //// if we are allowing to send multiple request while one is already being processing in the server.
+            //if (isRequstValid) {
+            //    var $inputNew = $input;///$(this);
+            //    var isDuplicateRequestAllowed = self.dontSendSameRequestTwice() && !self.isPreviousRequestIsSame($div, $inputNew, url);
+            //    isRequstValid = isDuplicateRequestAllowed || !self.dontSendSameRequestTwice();
+            //    // check if same request is allowed to send twice.
+            //    if (isRequstValid) {
 
-                    // if validation request before sending request.
-                    var validationRequires = self.isInputValidationRequirestoSendRequest();
+            //        // if validation request before sending request.
+            //        var validationRequires = self.isInputValidationRequirestoSendRequest();
 
-                    // is input needed to be valid before send the request.
-                    isRequstValid = (validationRequires && $inputNew.valid()) || !validationRequires;
+            //        // is input needed to be valid before send the request.
+            //        isRequstValid = (validationRequires && $inputNew.valid()) || !validationRequires;
 
-                    if (isRequstValid) {
-                        var fields = self.concatAdditionalFields($inputNew);
+            //        if (isRequstValid) {
+            //            var fields = self.concatAdditionalFields($inputNew);
 
-                        self.sendRequest($div, $inputNew, url, fields);
-                    }
-                    if (self.getSettings().focusPersistIfNotValid) {
-                        self.focusIfnotValid($inputNew);
-                    }
-                }
-            }
+            //            self.sendRequest($div, $inputNew, url, fields);
+            //        }
+            //        if (self.getSettings().focusPersistIfNotValid) {
+            //            self.focusIfnotValid($inputNew);
+            //        }
+            //    }
+            //}
         },
         focusIfnotValid: function ($input, force) {
             /// <summary>
@@ -546,7 +629,6 @@
             }
             return $existingIcon;
         },
-        //
         getInvalidIcon: function ($input) {
             /// <summary>
             /// Get invalid a tag.
@@ -753,18 +835,22 @@
         /// <returns type=""></returns>
         var $elementContainer = this;
         $selfContainer = this;
-        if ($elementContainer.isInit !== true) {
-            window.settings = $.extend({}, defaults, options);
-            var selectors = window.settings.selectors;
+        if (window.isInit !== true) {
+            var selectors = defaults.selectors;
             window.$divContainers = $elementContainer.find(selectors.divContainer);
             window.additionalFields = processAdditionalFields($elementContainer);
+            window.isInit = true;
         }
 
         var $containers = window.$divContainers;
 
         for (var i = 0; i < $containers.length; i++) {
-            var $divElement = $($containers[i]);
-            new plugin($divElement, options);
+            var settingsTemporary = $.extend({}, defaults, options),
+                $divElement = $($containers[i]),
+                settings = getSettingfromDiv($divElement, settingsTemporary);
+            console.log(settings);
+            console.log($divElement);
+            new plugin($divElement, settings);
         }
     };
 
