@@ -31,7 +31,10 @@
         throw new Error('serverComboBox requires jQuery validation plugin & jquery.validate.unobtrusive plugin.');
     }
     var pluginName = "serverComboBox",
-        $selfContainer = null,
+        $selfContainer,
+        $divContainers,
+        isInit = false,
+        additionalFields,
         KEYS = {
             BACKSPACE: 8,
             TAB: 9,
@@ -63,7 +66,7 @@
             placeHolder: "",
             placeHolderValue: "",
             placeHolderDisable: false,
-            isDynamicLoad:true,
+            isDynamicLoad: true,
             isTag: false,
             isLiveSearch: false,
             isOdata: false,
@@ -84,7 +87,7 @@
             url: "",
             delay: 250,
             nextPageUrl: "?Page=@pageNumber",
-            inMobileSelfUI: false,
+            selfUI: false,
             isOptimized: true,
             additionalCSS: "",
             singleItemClass: "",
@@ -162,7 +165,7 @@
         };
 
     // The actual plugin constructor
-    function plugin($divElement, $implementDiv,options) {
+    function plugin($divElement, $implementDiv, options) {
         /// <summary>
         /// Process the div element and 
         /// </summary>
@@ -173,12 +176,12 @@
         this.$implementDiv = $implementDiv;
         this.$element = $divElement;
         this._name = pluginName;
-        this.init($divElement);
+        this.init($divElement, $implementDiv);
     }
 
-    function processAdditionalFields($elementContainer) {
+    function processAdditionalFields($elementContainer, additionalFieldsNamesArray) {
         var addFields = [];
-        var selectors = window.settings.selectors.additionalFields;
+        var selectors = additionalFieldsNamesArray;
         for (var i = 0; i < selectors.length; i++) {
             var selector = selectors[i];
             var $element = $elementContainer.find(selector);
@@ -225,16 +228,16 @@
         var crossMatch = [
             { setting: "crossDomain", attr: "data-cross-domain" },
             { setting: "placeHolder", attr: "data-placeholder" },
-            { setting: "placeHolderValue",attr: "data-placeholder-value" },
+            { setting: "placeHolderValue", attr: "data-placeholder-value" },
             { setting: "placeHolderDisable", attr: "data-placeholder-disable" },
             { setting: "isDynamicLoad", attr: "data-dynamic-load" },
             { setting: "url", attr: "data-url" },
-            { setting: "nextPageUrl", attr: "data-next-page-url"},
-            { setting: "inMobileSelfUI", attr: "data-mobile-self-ui"},
-            { setting: "maxDisplayItems",attr: "data-max-search-item-display"},
-            { setting: "isOdata", attr: "data-odata"},
-            { setting: "isOdataPagefromServer",attr: "data-odata-is-paged-from-server"},
-            { setting: "delay", attr: "data-is-keypress-delay"},
+            { setting: "nextPageUrl", attr: "data-next-page-url" },
+            { setting: "selfUI", attr: "data-original-self-ui" },
+            { setting: "maxDisplayItems", attr: "data-max-search-item-display" },
+            { setting: "isOdata", attr: "data-odata" },
+            { setting: "isOdataPagefromServer", attr: "data-odata-is-paged-from-server" },
+            { setting: "delay", attr: "data-is-keypress-delay" },
             { setting: "additionalCSS", attr: "data-additional-css" },
             { setting: "isLiveSearch", attr: "data-live-search" },
             { setting: "isDependableCombo", attr: "data-dependable" },
@@ -273,15 +276,22 @@
             return variable === null || variable === undefined || variable.length === 0;
         },
 
-        init: function ($divElement) {
-            var selectors = this.getSettings();
-
-            this.$implement = $divElement.find(selectors.comboImplement);
-
-            this.processDiv($divElement);
+        init: function ($divElement, $implementDiv) {
+            if (this.isProcessingRequired()) {
+                this.processDiv($divElement);
+            }
         },
+
         getSettings: function () {
             return this.settings;
+        },
+        isProcessingRequired: function () {
+            /// <summary>
+            /// is any processing required to instantiate this plugin
+            /// </summary>
+            /// <returns type="">T/F</returns>
+            var settings = this.getSettings();
+            return settings.isDynamicLoad;
         },
         isMultipleRequestAllowed: function () {
             return this.getSettings().multipleRequests;
@@ -315,8 +325,7 @@
         },
         getInputOrCreate: function () {
             if (this.isEmpty(this.$input)) {
-                var $div = this.$element;
-                this.$input = $div.find("input");
+                // create input if necessary
             }
             return this.$input;
         },
@@ -327,11 +336,12 @@
         },
         processDiv: function ($div) {
             //var $self = $selfContainer;
-            var $input = this.getInputOrCreate($div),
-                url = this.getUrl();
+            var url = this.getUrl(),
+                settings = this.getSettings();
             //this.test();
-            this.inputProcessWithBlurEvent($div, $input, url);
-
+            if (settings.selfUI) {
+                
+            }
         },
         test: function () {
             this.showSpinner($input);
@@ -429,7 +439,7 @@
             }
         },
         concatAdditionalFields: function ($input) {
-            var addFields = window.additionalFields.slice();
+            var addFields = additionalFields.slice();
             var fields = {
                 name: $input.attr("name"),
                 value: $input.val()
@@ -523,13 +533,23 @@
 
         },
         markAsProcessing: function ($div, isProcessing) {
+            /// <summary>
+            /// Set mark as processing true or false.
+            /// </summary>
+            /// <param name="$div"></param>
+            /// <param name="isProcessing"></param>
+            /// <returns type=""></returns>
             if (this.isDebugging) {
-
                 console.log("Making: " + isProcessing);
             }
             $div.attr("data-is-processing", isProcessing);
         },
         isInProcessingMode: function ($div) {
+            /// <summary>
+            /// returns if in processing
+            /// </summary>
+            /// <param name="$div"></param>
+            /// <returns type=""></returns>
             var attr = $div.attr("data-is-processing");
             if (this.isDebugging) {
                 console.log("is Processing: " + attr);
@@ -835,24 +855,24 @@
     $.fn.serverComboBox = function (options) {
         /// <summary>
         /// expecting a container which contains divs
-        /// of .form-row and inside there is a input with
+        /// of .form-combo and inside there is a input with
         /// a .validator-container>.validator
         /// </summary>
         /// <param name="options"></param>
         /// <returns type=""></returns>
         var $elementContainer = this,
             settingsTemporary = $.extend({}, defaults, options),
-            attributes = settingsTemporary.attributes,
-            selectors = settingsTemporary.selectors;
+            selectors = settingsTemporary.selectors,
+            additionalFieldsSelectorArray = selectors.additionalFields;
 
         $selfContainer = this;
-        if (window.isInit !== true) {
-            window.$divContainers = $elementContainer.find(selectors.divContainer);
-            window.additionalFields = processAdditionalFields($elementContainer);
-            window.isInit = true;
+        if (isInit !== true) {
+            $divContainers = $elementContainer.find(selectors.divContainer);
+            additionalFields = processAdditionalFields($elementContainer, additionalFieldsSelectorArray);
+            isInit = true;
         }
 
-        var $containers = window.$divContainers;
+        var $containers = $divContainers;
 
         for (var i = 0; i < $containers.length; i++) {
             var $divElement = $($containers[i]),
@@ -861,7 +881,7 @@
             settings = getSettingfromDiv($implementDiv, settingTemporary2);
             console.log(settings);
             console.log($divElement);
-            new plugin($divElement,$implementDiv, settings);
+            new plugin($divElement, $implementDiv, settings);
         }
     };
 
