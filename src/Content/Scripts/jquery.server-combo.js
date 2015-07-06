@@ -162,7 +162,7 @@
         };
 
     // The actual plugin constructor
-    function plugin($divElement,options) {
+    function plugin($divElement, $implementDiv,options) {
         /// <summary>
         /// Process the div element and 
         /// </summary>
@@ -170,7 +170,7 @@
         /// <returns type=""></returns>
         $divElement.hide();
         this.settings = options;
-
+        this.$implementDiv = $implementDiv;
         this.$element = $divElement;
         this._name = pluginName;
         this.init($divElement);
@@ -196,6 +196,13 @@
     }
 
     function getSingleSettingItem($div, attribute, settingElement) {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="$div">$implement div with settings</param>
+        /// <param name="attribute"></param>
+        /// <param name="settingElement"></param>
+        /// <returns type=""></returns>
         var value = $div.attr(attribute);
         if (value !== undefined && value !== null) {
             if (value === "true") {
@@ -213,7 +220,7 @@
         /// <summary>
         /// Pass settings and it's got overwritten by $div attributes
         /// </summary>
-        /// <param name="$div"></param>
+        /// <param name="$div">$implement div with settings</param>
         /// <returns type="setting">returns settings</returns>
         var crossMatch = [
             { setting: "crossDomain", attr: "data-cross-domain" },
@@ -833,10 +840,13 @@
         /// </summary>
         /// <param name="options"></param>
         /// <returns type=""></returns>
-        var $elementContainer = this;
+        var $elementContainer = this,
+            settingsTemporary = $.extend({}, defaults, options),
+            attributes = settingsTemporary.attributes,
+            selectors = settingsTemporary.selectors;
+
         $selfContainer = this;
         if (window.isInit !== true) {
-            var selectors = defaults.selectors;
             window.$divContainers = $elementContainer.find(selectors.divContainer);
             window.additionalFields = processAdditionalFields($elementContainer);
             window.isInit = true;
@@ -845,12 +855,13 @@
         var $containers = window.$divContainers;
 
         for (var i = 0; i < $containers.length; i++) {
-            var settingsTemporary = $.extend({}, defaults, options),
-                $divElement = $($containers[i]),
-                settings = getSettingfromDiv($divElement, settingsTemporary);
+            var $divElement = $($containers[i]),
+                settingTemporary2 = $.extend({}, defaults, options),
+                $implementDiv = $divElement.find(selectors.comboImplement),
+            settings = getSettingfromDiv($implementDiv, settingTemporary2);
             console.log(settings);
             console.log($divElement);
-            new plugin($divElement, settings);
+            new plugin($divElement,$implementDiv, settings);
         }
     };
 
