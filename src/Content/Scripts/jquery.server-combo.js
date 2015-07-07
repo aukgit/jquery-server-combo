@@ -436,22 +436,7 @@
             //    }
             //}
         },
-        focusIfnotValid: function ($input, force) {
-            /// <summary>
-            /// Focus on the input if not valid.
-            /// If forced then focus anyway.
-            /// </summary>
-            /// <param name="$input"></param>
-            /// <param name="force"></param>
-            /// <returns type=""></returns>
-            if (force === true) {
-                $input.focus();
-                return;
-            }
-            if ($input.valid() === false) {
-                $input.focus();
-            }
-        },
+
         concatAdditionalFields: function ($input) {
             var addFields = additionalFields.slice();
             var fields = {
@@ -518,7 +503,7 @@
             }
         },
 
-        render : {
+        render: {
             plugin: null,
             input: function (plugin, $div, $implement) {
                 /// <summary>
@@ -529,135 +514,129 @@
 
                 if (plugin.isEmpty(this.$input)) {
                     // if empty then create
-                    $("<input/>", {
-                        
-                    })
+                    $("<input/>", {});
                 }
             }
-        }
-    },
+        },
 
         ajax: {
-        plguin: null,
+            plguin: null,
 
-        abortPrevious: function () {
-            /// <summary>
-            /// Abort previous ajax request and hide all the icons
-            /// </summary>
-            /// <returns type=""></returns>
-            if (!this.isEmpty(this.ajaxRequest)) {
-                this.ajaxRequest.abort();
-            }
-        },
-        addClassWhileSending: function () {
-            /// <summary>
-            /// add class while sending or processing the ajax request.
-            /// </summary>
-            var plugin = this.plguin,
-                $implement = plugin.$implementDiv,
-                $div = plugin.$element,
-                settings = plugin.getSettings(),
-                classes = settings.cssClass;
-            //add
-            plugin.classAddRemove($div, classes.requestSending);
-            plugin.classAddRemove($implement, classes.requestSending);
-        },
-        removeClassAfterSendingRequest: function () {
-            /// <summary>
-            /// remove class after sending or processing the ajax request.
-            /// </summary>
-            var plugin = this.plguin,
-                $implement = plugin.$implementDiv,
-                $div = plugin.$element,
-                settings = plugin.getSettings(),
-                classes = settings.cssClass;
-            // remove
-            plugin.classAddRemove($div, null, classes.requestSending);
-            plugin.classAddRemove($implement, null, classes.requestSending);
-        },
-        beforeSend: function ($implement, $input, url, sendingFields) {
+            abortPrevious: function () {
+                /// <summary>
+                /// Abort previous ajax request and hide all the icons
+                /// </summary>
+                /// <returns type=""></returns>
+                if (!this.isEmpty(this.ajaxRequest)) {
+                    this.ajaxRequest.abort();
+                }
+            },
+            addClassWhileSending: function () {
+                /// <summary>
+                /// add class while sending or processing the ajax request.
+                /// </summary>
+                var plugin = this.plguin,
+                    $implement = plugin.$implementDiv,
+                    $div = plugin.$element,
+                    settings = plugin.getSettings(),
+                    classes = settings.cssClass;
+                //add
+                plugin.classAddRemove($div, classes.requestSending);
+                plugin.classAddRemove($implement, classes.requestSending);
+            },
+            removeClassAfterSendingRequest: function () {
+                /// <summary>
+                /// remove class after sending or processing the ajax request.
+                /// </summary>
+                var plugin = this.plguin,
+                    $implement = plugin.$implementDiv,
+                    $div = plugin.$element,
+                    settings = plugin.getSettings(),
+                    classes = settings.cssClass;
+                // remove
+                plugin.classAddRemove($div, null, classes.requestSending);
+                plugin.classAddRemove($implement, null, classes.requestSending);
+            },
+            beforeSend: function ($implement, $input, url, sendingFields) {
 
-        },
-        sendRequest: function ($div, $implement, url, sendingFields) {
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <param name="$div"></param>
-            /// <param name="$implement"></param>
-            /// <param name="url"></param>
-            /// <param name="sendingFields"></param>
-            /// <returns type=""></returns>
-            var plugin = this.plguin,
-                method = plugin.getSubmitMethod(),
-                isInTestingMode = plugin.isDebugging,
-                events = plugin.getSettings().events;
-            if (!this.isEmpty(events.beforeSendingRequest)) {
-                //events.beforeSendingRequest($div, $input, url, sendingFields);
-            }
-      
-            // Abort previous ajax request and hide all the icons
-            this.abortPrevious();
+            },
+            sendRequest: function ($div, $implement, url, sendingFields) {
+                /// <summary>
+                /// 
+                /// </summary>
+                /// <param name="$div"></param>
+                /// <param name="$implement"></param>
+                /// <param name="url"></param>
+                /// <param name="sendingFields"></param>
+                /// <returns type=""></returns>
+                var plugin = this.plguin,
+                    method = plugin.getSubmitMethod(),
+                    isInTestingMode = plugin.isDebugging,
+                    events = plugin.getSettings().events;
+                if (!this.isEmpty(events.beforeSendingRequest)) {
+                    //events.beforeSendingRequest($div, $input, url, sendingFields);
+                }
 
-            this.addClassWhileSending();
+                // Abort previous ajax request and hide all the icons
+                this.abortPrevious();
 
-            plugin.markAsProcessing($div, true);
-            //plugin.setCurrentTextForNexttimeChecking($div);
-            this.ajaxRequest = jQuery.ajax({
-                method: method, // by default "GET"
-                url: url,
-                data: sendingFields, // PlainObject or String or Array
-                crossDomain: true,
-                dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
-            });
+                this.addClassWhileSending();
 
-            this.ajaxRequest.done(this.dataReceived);
+                plugin.markAsProcessing($div, true);
+                //plugin.setCurrentTextForNexttimeChecking($div);
+                this.ajaxRequest = jQuery.ajax({
+                    method: method, // by default "GET"
+                    url: url,
+                    data: sendingFields, // PlainObject or String or Array
+                    crossDomain: true,
+                    dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
+                });
 
-            this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
+                this.ajaxRequest.done(this.dataReceived);
+
+                this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
+                    this.removeClassAfterSendingRequest();
+                    //self.hideSpinner($input);
+                    self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                    console.log("Request failed: " + exceptionMessage + ". Url : " + url);
+                });
+            },
+            dataReceived: function (response) {
+                var plugin = this.plguin,
+                    method = plugin.getSubmitMethod(),
+                    isInTestingMode = plugin.isDebugging,
+                    events = plugin.getSettings().events;
                 this.removeClassAfterSendingRequest();
-                //self.hideSpinner($input);
-                self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
-                console.log("Request failed: " + exceptionMessage + ". Url : " + url);
-            });
+                if (isInTestingMode) {
+                    console.log(response);
+                }
 
+            },
+            errorProcess: function ($div, $input, jqXHR, textStatus, exceptionMessage, url) {
+                var code = jqXHR.status,
+                    settings = this.getSettings(),
+                    events = settings.events,
+                    msg = "";
 
+                if (code === 0) {
+                    code = 404;
+                    textStatus = "Requested url doesn't lead to a valid request.";
+                }
+                msg = "Code " + code + " : " + textStatus;
+
+                //console.log(jqXHR);
+                //console.log(textStatus);
+                //icons show/hide
+                this.showErrorIcon($input, msg);
+                if (settings.focusPersistIfNotValid) {
+                    this.focusIfnotValid($input, true);
+                }
+                if (!this.isEmpty(events.onError)) {
+                    events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                }
+            }
         },
-        dataReceived: function (response) {
-            var plugin = this.plguin,
-                method = plugin.getSubmitMethod(),
-                isInTestingMode = plugin.isDebugging,
-                events = plugin.getSettings().events;
-            this.removeClassAfterSendingRequest();
-            if (isInTestingMode) {
-                console.log(response);
-            }
-                
-        },
-        errorProcess: function ($div, $input, jqXHR, textStatus, exceptionMessage, url) {
-            var code = jqXHR.status,
-                settings = this.getSettings(),
-                events = settings.events,
-                msg = "";
-
-            if (code === 0) {
-                code = 404;
-                textStatus = "Requested url doesn't lead to a valid request.";
-            }
-            msg = "Code " + code + " : " + textStatus;
-
-            //console.log(jqXHR);
-            //console.log(textStatus);
-            //icons show/hide
-            this.showErrorIcon($input, msg);
-            if (settings.focusPersistIfNotValid) {
-                this.focusIfnotValid($input, true);
-            }
-            if (!this.isEmpty(events.onError)) {
-                events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
-            }
-        }
-        },
-
-    retrieveData: {
+        retrieveData: {
             plguin: null,
             getRegularData: function (url) {
                 var plguin = this.plguin,
@@ -683,41 +662,42 @@
                 //console.log(url);
                 //console.log(plguin.getSettings());
             }
-    }
+        }
 
-});
 
-$.fn.serverComboBox = function (options) {
-    /// <summary>
-    /// expecting a container which contains divs
-    /// of .form-combo and inside there is a input with
-    /// a .validator-container>.validator
-    /// </summary>
-    /// <param name="options"></param>
-    /// <returns type=""></returns>
-    var $elementContainer = this,
-        settingsTemporary = $.extend({}, defaults, options),
-        selectors = settingsTemporary.selectors,
-        additionalFieldsSelectorArray = selectors.additionalFields;
+    });
 
-    $selfContainer = this;
-    if (isInit !== true) {
-        $divContainers = $elementContainer.find(selectors.divContainer);
-        additionalFields = processAdditionalFields($elementContainer, additionalFieldsSelectorArray);
-        isInit = true;
-    }
+    $.fn.serverComboBox = function (options) {
+        /// <summary>
+        /// expecting a container which contains divs
+        /// of .form-combo and inside there is a input with
+        /// a .validator-container>.validator
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns type=""></returns>
+        var $elementContainer = this,
+            settingsTemporary = $.extend({}, defaults, options),
+            selectors = settingsTemporary.selectors,
+            additionalFieldsSelectorArray = selectors.additionalFields;
 
-    var $containers = $divContainers;
+        $selfContainer = this;
+        if (isInit !== true) {
+            $divContainers = $elementContainer.find(selectors.divContainer);
+            additionalFields = processAdditionalFields($elementContainer, additionalFieldsSelectorArray);
+            isInit = true;
+        }
 
-    for (var i = 0; i < $containers.length; i++) {
-        var $divElement = $($containers[i]),
-            settingTemporary2 = $.extend({}, defaults, options),
-            $implementDiv = $divElement.find(selectors.comboImplement),
-        settings = getSettingfromDiv($implementDiv, settingTemporary2);
-        console.log(settings);
-        console.log($divElement);
-        new plugin($divElement, $implementDiv, settings);
-    }
-};
+        var $containers = $divContainers;
+
+        for (var i = 0; i < $containers.length; i++) {
+            var $divElement = $($containers[i]),
+                settingTemporary2 = $.extend({}, defaults, options),
+                $implementDiv = $divElement.find(selectors.comboImplement),
+            settings = getSettingfromDiv($implementDiv, settingTemporary2);
+            console.log(settings);
+            console.log($divElement);
+            new plugin($divElement, $implementDiv, settings);
+        }
+    };
 
 })(jQuery, window, document);
