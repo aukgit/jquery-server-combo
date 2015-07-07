@@ -72,6 +72,8 @@
             isOdata: false,
             isOdataPagefromServer: true,
             isMultipleSelect: true,
+            isSelectFirstIndexByDefault: true,
+            submitMethod: "Get",
             isRequired: true,
             oDataRelationsList: [],
             isPaginationEnable: false,
@@ -135,7 +137,8 @@
                 comboOpen: "jq-combo-open",
                 comboHover: "jq-combo-hover",
                 styleSetName: "default",
-                listItem: "jq-list-item"
+                listItem: "jq-list-item",
+                requestSending: "requesting-to-server"
             },
             iconsIdPrefixes: {
                 invalid: "invalid-mark-",
@@ -258,7 +261,11 @@
             { setting: "pageSize", attr: "data-page-size" },
             { setting: "isCustomHtml", attr: "data-custom-html-format" },
             { setting: "isOptimized", attr: "data-optimized" },
-            { setting: "isTag", attr: "data-tag" }
+            { setting: "isTag", attr: "data-tag" },
+            { setting: "isSelectFirstIndexByDefault", attr: "data-is-select-first-item" },
+            { setting: "isTag", attr: "data-tag" },
+            { setting: "submitMethod", attr: "data-submit-method" }
+
         ];
         for (var i = 0; i < crossMatch.length; i++) {
             var config = crossMatch[i];
@@ -271,6 +278,10 @@
 
     // Avoid Plugin.prototype conflicts
     $.extend(plugin.prototype, {
+        data: null,
+        currentPageData: null,
+        selectedData: null,
+
         isDebugging: false,
         isEmpty: function (variable) {
             return variable === null || variable === undefined || variable.length === 0;
@@ -278,7 +289,9 @@
 
         init: function ($divElement, $implementDiv) {
             if (this.isProcessingRequired()) {
-                this.processDiv($divElement);
+                this.retrieveData.plguin = this;
+                this.ajax.plguin = this;
+                this.processDiv($divElement, $implementDiv);
             }
         },
 
@@ -330,17 +343,19 @@
             return this.$input;
         },
         getUrl: function () {
-            var attrs = this.getAttributes(),
-                $input = this.getInputOrCreate();
-            return $input.attr(attrs.url);
+            var settings = this.getSettings();
+            return settings.url;
         },
-        processDiv: function ($div) {
+        processDiv: function ($div, $implementDiv) {
             //var $self = $selfContainer;
-            var url = this.getUrl(),
-                settings = this.getSettings();
-            //this.test();
-            if (settings.selfUI) {
-                
+            var url = this.getUrl($implementDiv);
+            // this.test();
+            // Task :
+            // retrieve data.
+            // then render UI
+            this.retrieveData.get(url);
+            if (settings.selfUI === false) {
+
             }
         },
         test: function () {
@@ -374,7 +389,6 @@
         createInput: function () {
 
         },
-
         inputProcessWithBlurEvent: function ($div, $input, url) {
             var self = this,
                 settings = this.getSettings(),
@@ -453,85 +467,9 @@
             /// </summary>
             /// <param name="$div"></param>
             /// <returns type=""></returns>
-            var attrs = this.getSettings().attributes;
-            return $input.attr(attrs.submitMethod);
+            return this.getSettings().submitMethod;
         },
-        abortPreviousAjaxRequest: function ($input) {
-            /// <summary>
-            /// Abort previous ajax request and hide all the icons
-            /// </summary>
-            /// <returns type=""></returns>
-            this.showSpinner($input);
-            this.hideInvalidIcon($input);
-            this.hideErrorIcon($input);
-            this.hideErrorIcon($input);
-            this.hideValidIcon($input);
-            if (!this.isEmpty(this.ajaxRequest)) {
-                this.ajaxRequest.abort();
-            }
-        },
-        sendRequest: function ($div, $input, url, sendingFields) {
 
-            var method = this.getSubmitMethod($input),
-                self = this,
-                isInTestingMode = self.isDebugging,
-                events = self.getSettings().events;
-            if (!this.isEmpty(events.beforeSendingRequest)) {
-                events.beforeSendingRequest($div, $input, url, sendingFields);
-            }
-            //icons show/hide
-            $div.attr("data-icon-added", "true");
-            // Abort previous ajax request and hide all the icons
-            this.abortPreviousAjaxRequest($input);
-
-            self.markAsProcessing($div, true);
-            self.setCurrentTextForNexttimeChecking($input);
-            this.ajaxRequest = jQuery.ajax({
-                method: method, // by default "GET"
-                url: url,
-                data: sendingFields, // PlainObject or String or Array
-                crossDomain: true,
-                dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
-            }).done(function (response) {
-                if (isInTestingMode) {
-                    console.log(response);
-                }
-                self.markAsProcessing($div, false);
-                self.processResponse($input, response);
-                //icons show/hide
-                self.hideSpinner($input);
-            }).fail(function (jqXHR, textStatus, exceptionMessage) {
-                self.hideSpinner($input);
-                self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
-                console.log("Request failed: " + exceptionMessage + ". Url : " + url);
-            });
-
-
-        },
-        errorProcess: function ($div, $input, jqXHR, textStatus, exceptionMessage, url) {
-            var code = jqXHR.status,
-                settings = this.getSettings(),
-                events = settings.events,
-                msg = "";
-
-            if (code === 0) {
-                code = 404;
-                textStatus = "Requested url doesn't lead to a valid request.";
-            }
-            msg = "Code " + code + " : " + textStatus;
-
-            //console.log(jqXHR);
-            //console.log(textStatus);
-            //icons show/hide
-            this.showErrorIcon($input, msg);
-            if (settings.focusPersistIfNotValid) {
-                this.focusIfnotValid($input, true);
-            }
-            if (!this.isEmpty(events.onError)) {
-                events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
-            }
-
-        },
         markAsProcessing: function ($div, isProcessing) {
             /// <summary>
             /// Set mark as processing true or false.
@@ -556,184 +494,7 @@
             }
             return attr === "true";
         },
-        getInputNameOrId: function ($input) {
-            var id = $input.attr('id');
-            if (this.isEmpty(id)) {
-                id = $input.attr('name');
-            }
-            return id;
-        },
-        setMessageOnIcons: function ($icon, message) {
-            var $span = $icon.find("a").attr("title", message)
-                             .attr("data-original-title", message)
-                             .find("span");
-            $span.attr("title", message)
-                .attr("data-display", message);
-        },
-        createIcons: function ($input, icon, toolTipmessage, idPrefix) {
-            /// <summary>
-            /// Create icon and return that Icon whole container.
-            /// </summary>
-            /// <param name="$input">Specific input, this.$input</param>
-            /// <param name="icon">Icon class to display(mostly the font-awesome icons). Retrieve from this.getIcons()</param>
-            /// <param name="toolTipmessage">Icon's tooltip message.</param>
-            /// <param name="idPrefix">Id prefixes for that icon. For spinner this.getPrefixIds().spiner.</param>
-            /// <returns type="">Returns created icon object.</returns>
-            var id = this.getInputNameOrId($input),
-                $validator = this.getValidator(),
-                $div = this.$element,
-                settings = this.getSettings(),
-                events = settings.events,
-                wrapperName = this.getWrapperPrefix(),
-                finalId = idPrefix + id;
 
-            var html = "<div class='validation-icon-wrapper' id='" + wrapperName + finalId + "'><a data-toggle='tooltip' id='" + finalId + "'" +
-               "title='" + toolTipmessage + "' " +
-               "data-original-title='" + toolTipmessage + "' " +
-               "class='tooltip-show'>" +
-                    "<span data-display='" + toolTipmessage + "' " +
-                        "class='" + icon + "' " +
-                        "title='" + toolTipmessage + "'></span>" +
-                        "</a></div>";
-            $validator.append(html);
-            var $created = $.byId(wrapperName + finalId); // get the whole container
-            $.byId(finalId).tooltip();
-
-
-            if (!this.isEmpty(events.iconCreated)) {
-                events.iconCreated($div, $input, $created);
-            }
-
-            return $created;
-        },
-        getWrapperPrefix: function () {
-            return "wrapper-";
-        },
-        getValidator: function () {
-            /// <summary>
-            /// Returns validator div
-            /// </summary>
-            if (this.isEmpty(this.$validator)) {
-                var selectors = this.getSelectors();
-                this.$validator = this.$element.find(selectors.validator);
-            }
-            return this.$validator;
-        },
-        getCachedIcon: function ($input, iconIdPrefix) {
-            /// <summary>
-            /// Returns the icon for that specific icon id prefix
-            /// If not exist then create one and then return.
-            /// </summary>
-            /// <param name="$input"></param>
-            /// <param name="iconIdPrefix"></param>
-            /// <returns type=""></returns>
-            var ids = this.getIdPrefixes(),
-                id = this.getWrapperPrefix() + // wrapper-
-                    iconIdPrefix + // icon 
-                    this.getInputNameOrId($input),
-                cachedId = "$" + id;
-            var $existingIcon = this[cachedId];
-            if (this.isEmpty($existingIcon)) {
-                // doesn't have the cache icon.
-                // icon needs to be created.
-                var messages = this.getMessages(),
-                    msg = "", // no message except for spinner, others will come from server.
-                    icons = this.getIcons(),
-                    iconClass = "";
-                // set icon classes based on the given id.
-                if (iconIdPrefix === ids.spinner) {
-                    iconClass = icons.spinner;
-                    msg = messages.requesting;
-                } else if (iconIdPrefix === ids.valid) {
-                    iconClass = icons.valid;
-                } else if (iconIdPrefix === ids.invalid) {
-                    iconClass = icons.invalid;
-                } else if (iconIdPrefix === ids.error) {
-                    iconClass = icons.error;
-                }
-                $existingIcon = this.createIcons($input, iconClass, msg, iconIdPrefix);
-                this[cachedId] = $existingIcon;
-            }
-            return $existingIcon;
-        },
-        getInvalidIcon: function ($input) {
-            /// <summary>
-            /// Get invalid a tag.
-            /// </summary>
-            if (this.isEmpty(this.$invalidMarkIcon)) {
-                var ids = this.getIdPrefixes();
-                this.$invalidMarkIcon = this.getCachedIcon($input, ids.invalid);
-            }
-            return this.$invalidMarkIcon;
-        },
-
-        getValidIcon: function ($input) {
-            /// <summary>
-            /// Get valid a tag.
-            /// </summary>
-            if (this.isEmpty(this.$validMarkIcon)) {
-                var ids = this.getIdPrefixes();
-                this.$validMarkIcon = this.getCachedIcon($input, ids.valid);
-            }
-            return this.$validMarkIcon;
-        },
-        getSpinner: function ($input) {
-            /// <summary>
-            /// Get spinner's div tag.
-            /// </summary>
-            if (this.isEmpty(this.$spinner)) {
-                var ids = this.getIdPrefixes();
-                this.$spinner = this.getCachedIcon($input, ids.spinner);
-            }
-            return this.$spinner;
-        },
-        getErrorIcon: function ($input) {
-            /// <summary>
-            /// Get spinner's div tag.
-            /// </summary>
-            if (this.isEmpty(this.$errorIcon)) {
-                var ids = this.getIdPrefixes();
-                this.$errorIcon = this.getCachedIcon($input, ids.error);
-            }
-            return this.$errorIcon;
-        },
-        showErrorIcon: function ($input, message) {
-            var $icon = this.getErrorIcon($input);
-            this.setMessageOnIcons($icon, message);
-            this.animateOn($icon);
-        },
-        showSpinner: function ($input) {
-            var $spinner = this.getSpinner($input);
-            this.animateOn($spinner);
-        },
-
-        showInvalidIcon: function ($input, message) {
-            var $markIcon = this.getInvalidIcon($input);
-            this.setMessageOnIcons($markIcon, message);
-            this.animateOn($markIcon);
-        },
-
-        showValidIcon: function ($input, message) {
-            var $markIcon = this.getValidIcon($input);
-            this.setMessageOnIcons($markIcon, message);
-            this.animateOn($markIcon);
-        },
-        hideValidIcon: function ($input) {
-            var $icon = this.getValidIcon($input);
-            this.animateOff($icon);
-        },
-        hideErrorIcon: function ($input) {
-            var $icon = this.getErrorIcon($input);
-            this.animateOff($icon);
-        },
-        hideInvalidIcon: function ($input) {
-            var $icon = this.getInvalidIcon($input);
-            this.animateOff($icon);
-        },
-        hideSpinner: function ($input) {
-            var $spinner = this.getSpinner($input);
-            this.animateOff($spinner);
-        },
         animateOn: function ($object) {
             $object.fadeIn("slow");
         },
@@ -741,148 +502,222 @@
             $object.hide();
         },
 
-        processResponse: function ($input, response) {
+        classAddRemove: function ($element, add, remove) {
+            /// <summary>
+            /// Every class addition or remove should be done by this method.
+            /// </summary>
+            /// <param name="$implement"></param>
+            /// <param name="add"></param>
+            /// <param name="remove"></param>
+            /// <returns type=""></returns> 
+            if (!this.isEmpty(add)) {
+                $element.addClass(add);
+            }
+            if (!this.isEmpty(remove)) {
+                $element.removeClass(remove);
+            }
+        },
+
+        render : {
+            plugin: null,
+            input: function (plugin, $div, $implement) {
+                /// <summary>
+                /// Get input from cache or else create it.
+                /// </summary>
+                /// <returns type=""></returns>
+                var cssClass = plugin.getSettings().cssClass;
+
+                if (plugin.isEmpty(this.$input)) {
+                    // if empty then create
+                    $("<input/>", {
+                        
+                    })
+                }
+            }
+        }
+    },
+
+        ajax: {
+        plguin: null,
+
+        abortPrevious: function () {
+            /// <summary>
+            /// Abort previous ajax request and hide all the icons
+            /// </summary>
+            /// <returns type=""></returns>
+            if (!this.isEmpty(this.ajaxRequest)) {
+                this.ajaxRequest.abort();
+            }
+        },
+        addClassWhileSending: function () {
+            /// <summary>
+            /// add class while sending or processing the ajax request.
+            /// </summary>
+            var plugin = this.plguin,
+                $implement = plugin.$implementDiv,
+                $div = plugin.$element,
+                settings = plugin.getSettings(),
+                classes = settings.cssClass;
+            //add
+            plugin.classAddRemove($div, classes.requestSending);
+            plugin.classAddRemove($implement, classes.requestSending);
+        },
+        removeClassAfterSendingRequest: function () {
+            /// <summary>
+            /// remove class after sending or processing the ajax request.
+            /// </summary>
+            var plugin = this.plguin,
+                $implement = plugin.$implementDiv,
+                $div = plugin.$element,
+                settings = plugin.getSettings(),
+                classes = settings.cssClass;
+            // remove
+            plugin.classAddRemove($div, null, classes.requestSending);
+            plugin.classAddRemove($implement, null, classes.requestSending);
+        },
+        beforeSend: function ($implement, $input, url, sendingFields) {
+
+        },
+        sendRequest: function ($div, $implement, url, sendingFields) {
             /// <summary>
             /// 
             /// </summary>
-            /// <param name="response"></param>
+            /// <param name="$div"></param>
+            /// <param name="$implement"></param>
+            /// <param name="url"></param>
+            /// <param name="sendingFields"></param>
             /// <returns type=""></returns>
-            //response: {
-            //        message: "Field is valid.",
-            //        isValid: true,
-            //        isError: false,
-            //        errorCode: null,
-            //        errorMessage: null
-            //}
-            var self = this,
-                $div = this.$element,
-                settings = this.getSettings(),
-                events = settings.events;
+            var plugin = this.plguin,
+                method = plugin.getSubmitMethod(),
+                isInTestingMode = plugin.isDebugging,
+                events = plugin.getSettings().events;
+            if (!this.isEmpty(events.beforeSendingRequest)) {
+                //events.beforeSendingRequest($div, $input, url, sendingFields);
+            }
+      
+            // Abort previous ajax request and hide all the icons
+            this.abortPrevious();
 
-            if (!this.isEmpty(events.responseReceived)) {
-                events.responseReceived($div, $input, response);
-            }
-            var responseFormat = settings.response;
+            this.addClassWhileSending();
 
-            response = $.extend({}, responseFormat, response);
-            if (response.isValid) {
-                self.validResponse($input, response);
-            } else {
-                self.inValidResponse($input, response);
-            }
-            if (!this.isEmpty(events.responseProcessed)) {
-                events.responseProcessed($div, $input, response);
-            }
+            plugin.markAsProcessing($div, true);
+            //plugin.setCurrentTextForNexttimeChecking($div);
+            this.ajaxRequest = jQuery.ajax({
+                method: method, // by default "GET"
+                url: url,
+                data: sendingFields, // PlainObject or String or Array
+                crossDomain: true,
+                dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
+            });
+
+            this.ajaxRequest.done(this.dataReceived);
+
+            this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
+                this.removeClassAfterSendingRequest();
+                //self.hideSpinner($input);
+                self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                console.log("Request failed: " + exceptionMessage + ". Url : " + url);
+            });
+
+
         },
-        validResponse: function ($input, response) {
-            /// <summary>
-            /// Process if response has valid = true.
-            /// </summary>
-            /// <param name="$input"></param>
-            /// <param name="response">Reponse json</param>
-            // response is valid
-            // spinner is already hidden from sendRequest method.
-            //response: {
-            //        message: "Field is valid.",
-            //        isValid: true,
-            //        isError: false,
-            //        errorCode: null,
-            //        errorMessage: null
-            //}
-            var isDisableInput = this.isDisableInputOnValidation(),
-                events = this.getSettings().events,
-                settings = this.getSettings(),
-                $div = this.$element,
-                validation = true,
-                msg = response.message;
-            if (!this.isEmpty(events.validBefore)) {
-                events.validBefore($div, $input, response);
+        dataReceived: function (response) {
+            var plugin = this.plguin,
+                method = plugin.getSubmitMethod(),
+                isInTestingMode = plugin.isDebugging,
+                events = plugin.getSettings().events;
+            this.removeClassAfterSendingRequest();
+            if (isInTestingMode) {
+                console.log(response);
             }
-            this.showValidIcon($input, response.message);
-
-            if (isDisableInput) {
-                $input.attr("disabled", "disabled");
-            }
-
-            $div.attr("data-server-validated", validation)
-                .attr("data-message", msg);
-            $input.attr("data-server-validated", validation)
-                .attr("data-message", msg);
-
-            if (settings.hideOnValidation) {
-                $div.attr("data-is-hidden", validation);
-                $div.hide('slow');
-            }
-
-            if (!this.isEmpty(events.validAfter)) {
-                events.validAfter($div, $input, response);
-            }
+                
         },
-        inValidResponse: function ($input, response) {
-            //response: {
-            //        message: "Field is valid.",
-            //        isValid: true,
-            //        isError: false,
-            //        errorCode: null,
-            //        errorMessage: null
-            //}
-            var settings = this.getSettings(),
+        errorProcess: function ($div, $input, jqXHR, textStatus, exceptionMessage, url) {
+            var code = jqXHR.status,
+                settings = this.getSettings(),
                 events = settings.events,
-                $div = this.$element,
-                validation = false,
-                msg = response.message;
+                msg = "";
 
-            if (!this.isEmpty(events.invalidBefore)) {
-                events.invalidBefore($div, $input, response);
+            if (code === 0) {
+                code = 404;
+                textStatus = "Requested url doesn't lead to a valid request.";
             }
+            msg = "Code " + code + " : " + textStatus;
 
-            this.showInvalidIcon($input, response.errorCode + " : " + response.errorMessage);
-            $div.attr("data-server-validated", validation)
-                .attr("data-message", msg);
-            $input.attr("data-server-validated", validation)
-                .attr("data-message", msg);
+            //console.log(jqXHR);
+            //console.log(textStatus);
+            //icons show/hide
+            this.showErrorIcon($input, msg);
             if (settings.focusPersistIfNotValid) {
                 this.focusIfnotValid($input, true);
             }
-            if (!this.isEmpty(events.invalidAfter)) {
-                events.invalidAfter($div, $input, response);
+            if (!this.isEmpty(events.onError)) {
+                events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
             }
         }
-    });
+        },
 
-    // A really lightweight plugin wrapper around the constructor,
-    // preventing against multiple instantiations
-    $.fn.serverComboBox = function (options) {
-        /// <summary>
-        /// expecting a container which contains divs
-        /// of .form-combo and inside there is a input with
-        /// a .validator-container>.validator
-        /// </summary>
-        /// <param name="options"></param>
-        /// <returns type=""></returns>
-        var $elementContainer = this,
-            settingsTemporary = $.extend({}, defaults, options),
-            selectors = settingsTemporary.selectors,
-            additionalFieldsSelectorArray = selectors.additionalFields;
+    retrieveData: {
+            plguin: null,
+            getRegularData: function (url) {
+                var plguin = this.plguin,
+                    ajax = plugin.ajax;
+                //ajax.sendRequest()
 
-        $selfContainer = this;
-        if (isInit !== true) {
-            $divContainers = $elementContainer.find(selectors.divContainer);
-            additionalFields = processAdditionalFields($elementContainer, additionalFieldsSelectorArray);
-            isInit = true;
-        }
+            },
+            get: function (url) {
+                /// <summary>
+                /// Retrieve data as per necessary.
+                /// Decide weather if :
+                /// it is odata then get data by pagination.
+                /// it is also paged data from non odata source also retrieve it.
+                /// Or anything else..
+                /// Route point of getting the data.
+                /// </summary>
+                /// <param name="url"></param>
+                /// <returns type=""></returns>
+                var plguin = this.plguin;
 
-        var $containers = $divContainers;
+                //console.log(plguin);
+                //console.log(this);
+                //console.log(url);
+                //console.log(plguin.getSettings());
+            }
+    }
 
-        for (var i = 0; i < $containers.length; i++) {
-            var $divElement = $($containers[i]),
-                settingTemporary2 = $.extend({}, defaults, options),
-                $implementDiv = $divElement.find(selectors.comboImplement),
-            settings = getSettingfromDiv($implementDiv, settingTemporary2);
-            console.log(settings);
-            console.log($divElement);
-            new plugin($divElement, $implementDiv, settings);
-        }
-    };
+});
+
+$.fn.serverComboBox = function (options) {
+    /// <summary>
+    /// expecting a container which contains divs
+    /// of .form-combo and inside there is a input with
+    /// a .validator-container>.validator
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns type=""></returns>
+    var $elementContainer = this,
+        settingsTemporary = $.extend({}, defaults, options),
+        selectors = settingsTemporary.selectors,
+        additionalFieldsSelectorArray = selectors.additionalFields;
+
+    $selfContainer = this;
+    if (isInit !== true) {
+        $divContainers = $elementContainer.find(selectors.divContainer);
+        additionalFields = processAdditionalFields($elementContainer, additionalFieldsSelectorArray);
+        isInit = true;
+    }
+
+    var $containers = $divContainers;
+
+    for (var i = 0; i < $containers.length; i++) {
+        var $divElement = $($containers[i]),
+            settingTemporary2 = $.extend({}, defaults, options),
+            $implementDiv = $divElement.find(selectors.comboImplement),
+        settings = getSettingfromDiv($implementDiv, settingTemporary2);
+        console.log(settings);
+        console.log($divElement);
+        new plugin($divElement, $implementDiv, settings);
+    }
+};
 
 })(jQuery, window, document);
