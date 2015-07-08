@@ -18,7 +18,7 @@
  * by Md. Alim Ul karim 
  * 
  * Date         : 04 Jul 2015
- * Modified Date: 04 Jul 2015
+ * Modified Date: 09 Jul 2015
  */
 
 ; (function ($, window, document, undefined) {
@@ -292,6 +292,7 @@
         data: null,
         currentPageData: null,
         selectedData: null,
+        $input: null,
 
         isDebugging: true,
         isEmpty: function (variable) {
@@ -300,10 +301,12 @@
 
         init: function ($divElement, $implementDiv) {
             if (this.isProcessingRequired()) {
-                var css = this.getCssClasses();
-                this.retrieveData.plguin = this;
-                this.ajax.plguin = this;
-                this.render.plguin = this;
+                var css = this.getCssClasses(),
+                    render = this.render;
+
+                // sets this plugin to it's sub items.
+                this.setPluginSubItems();
+
                 this.processDiv($divElement, $implementDiv);
 
                 // add classes
@@ -317,12 +320,34 @@
 
 
 
-                // render elements
-                this.render.input(this, $divElement, $implementDiv);
+                // render elements and retrieve elements in plugin object
+                render.input(this, $divElement, $implementDiv);
+
+
+                var $inputWrapper = render.$inputWrapper,
+                    $input = render.$input;
+
+                // trigger events
+                this.setTriggerableEvents($divElement, $implementDiv, $inputWrapper, $input);
 
             }
         },
 
+        
+        setPluginSubItems: function () {
+            /// <summary>
+            /// Sets 
+            /// this.retrieveData.plguin = this;
+            /// this.ajax.plguin = this;
+            /// this.render.plguin = this;
+            /// ...
+            /// </summary>
+            /// <returns type=""></returns>
+            this.retrieveData.plguin = this;
+            this.ajax.plguin = this;
+            this.render.plguin = this;
+            this.triggerableEvents.plguin = this;
+        },
         getSettings: function () {
             return this.settings;
         },
@@ -499,7 +524,6 @@
             //    }
             //}
         },
-
         concatAdditionalFields: function ($input) {
             var addFields = additionalFields.slice();
             var fields = {
@@ -517,7 +541,6 @@
             /// <returns type=""></returns>
             return this.getSettings().submitMethod;
         },
-
         markAsProcessing: function ($div, isProcessing) {
             /// <summary>
             /// Set mark as processing true or false.
@@ -542,14 +565,12 @@
             }
             return attr === "true";
         },
-
         animateOn: function ($object) {
             $object.fadeIn("slow");
         },
         animateOff: function ($object) {
             $object.hide();
         },
-
         classAddRemove: function ($element, add, remove) {
             /// <summary>
             /// Every class addition or remove should be done by this method.
@@ -565,39 +586,69 @@
                 $element.removeClass(remove);
             }
         },
+        setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
+            var triggerableEvents = this.triggerableEvents,
+                self = this;
 
-        triggerEvents : {
+            $implement.hover(
+                function (e) {
+                    // in
+                    triggerableEvents.implementHoverIn(self, $div, $implement, $inputWrapper, $input);
+                },
+                function (e) {
+                    // out
+                    triggerableEvents.implementHoverOut(self, $div, $implement, $inputWrapper, $input);
+                }
+            );
+        },
+        triggerableEvents: {
             plugin: null,
+            divHoverIn: function(plugin, $div, $implement, $inputWrapper, $input) {
+            
+            },
+            divHoverOut: function (plugin, $div, $implement, $inputWrapper, $input) {
+                
+            }, 
+            implementHoverIn: function (plugin, $div, $implement, $inputWrapper, $input) {
+                var css = plugin.getCssClasses();
+                plugin.classAddRemove($div, css.comboHover);
+            },
+            implementHoverOut: function (plugin, $div, $implement, $inputWrapper, $input) {
+                var css = plugin.getCssClasses();
+                plugin.classAddRemove($div, null, css.comboHover);
+            },
+            caretClick: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
 
-            divHover : function($implement, $inputWrapper, $input) {
-                
             },
-            implementHover : function($implement, $inputWrapper, $input) {
-                
+            caretHoverIn: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
+
             },
-            clickOnCaret : function($implement, $inputWrapper, $input) {
-                
+            caretHoverOut: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
+
             }
         },
 
         render: {
             plugin: null,
+            $inputWrapper: null,
+            $input: null,
+            $caretWrapper : null,
             inputWrapper: function (plugin, $div, $implement, idPrefixes, id, cssClass) {
                 /// <summary>
-                /// Render and get
+                /// Render and get wrappers for input, along with caret wrapper and so on.
+                /// this.$caretWrapper, this.$inputWrapper populated.
                 /// </summary>
                 /// <param name="plugin"></param>
                 /// <param name="$div"></param>
                 /// <param name="$implement"></param>
-                /// <param name="idPrefixes"></param>
-                /// <param name="id"></param>
+                /// <param name="idPrefixes">Id prefix object from the settings</param>
+                /// <param name="id">Send the id of the input</param>
                 /// <returns type=""></returns>
                 var elementName = "$inputWrapper";
 
                 if (plugin.isEmpty(this[elementName])) {
                     var wrapper1 = idPrefixes.wrapper1 + id,
                         wrapper2 = idPrefixes.wrapper2 + id,
-                        wrapper3 = idPrefixes.wrapper3 + id,
                         dropDownIconId = "dropdown-icon-" + id,
                         dropDownIconWrapperId = "dropdown-wrapper-icon-" + id,
 
@@ -621,15 +672,17 @@
                     $iconWrapper.appendTo($divWrapper2);
                     $divWrapper2.appendTo($divWrapper1);
                     $divWrapper1.appendTo($implement);
+                    this.$caretWrapper = $.byId(dropDownIconWrapperId);
                     this[elementName] = $.byId(wrapper2);
                 }
                 return this[elementName];
             },
             input: function (plugin, $div, $implement) {
                 /// <summary>
-                /// Get input from cache or else create it.
+                /// Get input from cache or else create it and then return.
+                /// also sets plugin.$input = returned input
                 /// </summary>
-                /// <returns type=""></returns>
+                /// <returns type="">$input box</returns>
                 var cssClass = plugin.getCssClasses(),
                     settings = plugin.getSettings(),
                     ids = plugin.getIdPrefixes(),
@@ -664,12 +717,12 @@
                         console.log(this.$input);
                     }
                     events.inputCreated(plugin, $div, $implement, this[elementName]);
+                    plugin[elementName] = this[elementName];
                 }
 
                 return this[elementName];
             }
         },
-
         ajax: {
             plguin: null,
 
