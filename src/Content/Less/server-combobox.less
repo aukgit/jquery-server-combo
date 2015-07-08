@@ -1,0 +1,34 @@
+﻿@import "override-mvc.variables.less";
+
+
+@dropdown-caret-color: #a5a5a5;
+
+.jq-server-combo {
+    .first-wrapper-container {
+        position: static;
+        .width(@inputs-max-width);
+    }
+
+    .second-wrapper-container {
+        position: relative;
+        .max-width(@inputs-max-width);
+    }
+
+    .dropdown-wrapper-icon {
+        position: absolute;
+        .right(2px);
+        color: @dropdown-caret-color;
+
+        &:hover {
+            color: @link-hover-color;
+        }
+    }
+
+    .implement, [data-toggle="tooltip"] {
+        display: inline-block;
+    }
+
+    .dropdown-icon {
+        .padding(10px);
+    }
+}

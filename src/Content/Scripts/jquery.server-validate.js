@@ -36,11 +36,11 @@
         $selfContainer = null,
         defaults = {
             crossDomain: true,
-            multipleRequests: true,
+            multipleRequests: false,
             checkValidationBeforeSendingRequest: true,
             dontSendSameRequestTwice: true,
-            disableInputOnValidation: true,
-            focusPersistIfNotValid: true,
+            disableInputOnValidation: false,
+            focusPersistIfNotValid: false,
             hideOnValidation: false,
             messages: {
                 requesting: "Requesting data..."

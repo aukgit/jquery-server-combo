@@ -84,7 +84,7 @@
             displayField: "display",
             searchingField: "display",
             valueField: "id",
-            valueSelect: "",
+            valueSelected: "",
             selectsFistOneByDefault: true,
             url: "",
             delay: 250,
@@ -130,21 +130,31 @@
                 error: "validation-icon-error fa fa-exclamation-circle"
             },
             cssClass: {
-                input: "jq-input",
+                input: "jq-combo-input form-control",
                 inputHover: "jq-combo-hover",
                 comboHidden: "jq-combo-hidden",
                 combo: "jq-combo",
                 comboOpen: "jq-combo-open",
                 comboHover: "jq-combo-hover",
-                styleSetName: "default",
-                listItem: "jq-list-item",
-                requestSending: "requesting-to-server"
+                styleSetName: "default-style",
+                listItem: "jq-combo-list-item",
+                requestSending: "jq-combo-requesting-to-server",
+                wrapper1: "first-wrapper-container",
+                wrapper2: "second-wrapper-container",
+                wrapper3: "third-wrapper-container",
+                wrapper4: "forth-wrapper-container"
             },
+
             iconsIdPrefixes: {
                 invalid: "invalid-mark-",
                 valid: "valid-mark-",
                 spinner: "validation-spinner-",
-                error: "validation-error-"
+                error: "validation-error-",
+                input: "jq-input-",
+                wrapper1: "first-wrapper-",
+                wrapper2: "second-wrapper-",
+                wrapper3: "third-wrapper-",
+                wrapper4: "forth-wrapper-"
             },
             response: {
                 message: "Field is valid.",
@@ -155,6 +165,7 @@
             },
             events: {
                 iconCreated: function ($div, $input, $iconContainer) { },
+                inputCreated: function (plugin, $div, $implementDiv, $input) { },
                 sameRequestTwice: function ($div, $input, url, previousText) { },
                 beforeSendingRequest: function ($div, $input, url) { },
                 responseReceived: function ($div, $input, response) { },
@@ -174,7 +185,7 @@
         /// </summary>
         /// <param name="element"></param>
         /// <returns type=""></returns>
-        $divElement.hide();
+        //$divElement.hide();
         this.settings = options;
         this.$implementDiv = $implementDiv;
         this.$element = $divElement;
@@ -246,7 +257,7 @@
             { setting: "isDependableCombo", attr: "data-dependable" },
             { setting: "dependablePropertyName", attr: "data-dependable-prop-name" },
             { setting: "inputValidationRegularExpression", attr: "data-regularexpression-valid" },
-            { setting: "valueSelect", attr: "data-selected-value" },
+            { setting: "valueSelected", attr: "data-selected-value" },
             { setting: "isMultipleSelect", attr: "data-is-multiple" },
             { setting: "isRequired", attr: "data-is-required" },
             { setting: "elementCreatingId", attr: "data-id" },
@@ -282,16 +293,33 @@
         currentPageData: null,
         selectedData: null,
 
-        isDebugging: false,
+        isDebugging: true,
         isEmpty: function (variable) {
             return variable === null || variable === undefined || variable.length === 0;
         },
 
         init: function ($divElement, $implementDiv) {
             if (this.isProcessingRequired()) {
+                var css = this.getCssClasses();
                 this.retrieveData.plguin = this;
                 this.ajax.plguin = this;
+                this.render.plguin = this;
                 this.processDiv($divElement, $implementDiv);
+
+                // add classes
+                this.classAddRemove($divElement, css.styleSetName);
+                this.classAddRemove($implementDiv, css.styleSetName);
+                this.classAddRemove($divElement, "jq-server-combo");
+                this.classAddRemove($implementDiv, "jq-server-combo-implement");
+                this.classAddRemove($implementDiv, "implement");
+
+                $divElement.attr("data-style", css.styleSetName);
+
+
+
+                // render elements
+                this.render.input(this, $divElement, $implementDiv);
+
             }
         },
 
@@ -321,6 +349,34 @@
         getAttributes: function () {
             return this.getSettings().attributes;
         },
+        getID: function () {
+            /// <summary>
+            /// Returns element id.
+            /// </summary>
+            /// <returns type="">Returns element id.</returns>
+            return this.getSettings().elementCreatingId;
+        },
+        getName: function () {
+            /// <summary>
+            /// Returns element name/combo name for form input.
+            /// </summary>
+            /// <returns type="">Returns element name/combo name for form input.</returns>
+            return this.getSettings().elementName;
+        },
+        getValue: function () {
+            /// <summary>
+            /// Returns element combo value from settings.
+            /// </summary>
+            /// <returns type="">Returns element combo value from settings</returns>
+            return this.getSettings().valueSelected;
+        },
+        setValue: function (val) {
+            /// <summary>
+            /// Set element value in settings and in the object.
+            /// inComplete
+            /// </summary>
+            this.settings.valueSelected = val;
+        },
         getEvents: function () {
             return this.getSettings().events;
         },
@@ -332,6 +388,13 @@
         },
         getSelectors: function () {
             return this.getSettings().selectors;
+        },
+        getCssClasses: function () {
+            /// <summary>
+            /// Returns all classes list.
+            /// </summary>
+            /// <returns type=""></returns>
+            return this.getSettings().cssClass;
         },
         getMessages: function () {
             return this.getSettings().messages;
@@ -503,19 +566,107 @@
             }
         },
 
+        triggerEvents : {
+            plugin: null,
+
+            divHover : function($implement, $inputWrapper, $input) {
+                
+            },
+            implementHover : function($implement, $inputWrapper, $input) {
+                
+            },
+            clickOnCaret : function($implement, $inputWrapper, $input) {
+                
+            }
+        },
+
         render: {
             plugin: null,
+            inputWrapper: function (plugin, $div, $implement, idPrefixes, id, cssClass) {
+                /// <summary>
+                /// Render and get
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <param name="$div"></param>
+                /// <param name="$implement"></param>
+                /// <param name="idPrefixes"></param>
+                /// <param name="id"></param>
+                /// <returns type=""></returns>
+                var elementName = "$inputWrapper";
+
+                if (plugin.isEmpty(this[elementName])) {
+                    var wrapper1 = idPrefixes.wrapper1 + id,
+                        wrapper2 = idPrefixes.wrapper2 + id,
+                        wrapper3 = idPrefixes.wrapper3 + id,
+                        dropDownIconId = "dropdown-icon-" + id,
+                        dropDownIconWrapperId = "dropdown-wrapper-icon-" + id,
+
+                        $divWrapper1 = $("<div></div>", {
+                            id: wrapper1,
+                            'class': cssClass.wrapper1
+                        }),
+                        $divWrapper2 = $("<div></div>", {
+                            id: wrapper2,
+                            'class': cssClass.wrapper2
+                        }),
+                        $iconWrapper = $("<span></span>", {
+                            id: dropDownIconWrapperId,
+                            'class': "dropdown-wrapper-icon"
+                        }),
+                        $icon = $("<i></i>", {
+                            id: dropDownIconId,
+                            'class': "dropdown-icon fa fa-caret-down"
+                        });
+                    $icon.appendTo($iconWrapper);
+                    $iconWrapper.appendTo($divWrapper2);
+                    $divWrapper2.appendTo($divWrapper1);
+                    $divWrapper1.appendTo($implement);
+                    this[elementName] = $.byId(wrapper2);
+                }
+                return this[elementName];
+            },
             input: function (plugin, $div, $implement) {
                 /// <summary>
                 /// Get input from cache or else create it.
                 /// </summary>
                 /// <returns type=""></returns>
-                var cssClass = plugin.getSettings().cssClass;
+                var cssClass = plugin.getCssClasses(),
+                    settings = plugin.getSettings(),
+                    ids = plugin.getIdPrefixes(),
+                    id = plugin.getID(),
+                    finalId = ids.input + id,
+                    events = plugin.getEvents();
 
-                if (plugin.isEmpty(this.$input)) {
+                var elementName = "$input";
+
+                if (plugin.isEmpty(this[elementName])) {
                     // if empty then create
-                    $("<input/>", {});
+                    var placeHolder = "", placeHolderValue = "", isPlaceHolder = false;
+                    if (settings.placeHolderDisable === false) {
+                        placeHolder = settings.placeHolder;
+                        placeHolderValue = settings.placeHolderValue;
+                        isPlaceHolder = true;
+                    }
+                    var $inputHtml = $("<input/>", {
+                        id: finalId,
+                        'class': cssClass.input,
+                        type: "text",
+                        placeholder: placeHolder,
+                        'data-placeholder-val': placeHolderValue,
+                        'data-is-placeholder': isPlaceHolder
+                    });
+                    var $inputWrapper = this.inputWrapper(plugin, $div, $implement, ids, id, cssClass);
+
+                    $inputHtml.prependTo($inputWrapper);
+
+                    this[elementName] = $.byId(finalId);
+                    if (plugin.isDebugging) {
+                        console.log(this.$input);
+                    }
+                    events.inputCreated(plugin, $div, $implement, this[elementName]);
                 }
+
+                return this[elementName];
             }
         },
 
@@ -694,8 +845,8 @@
                 settingTemporary2 = $.extend({}, defaults, options),
                 $implementDiv = $divElement.find(selectors.comboImplement),
             settings = getSettingfromDiv($implementDiv, settingTemporary2);
-            console.log(settings);
-            console.log($divElement);
+            //console.log(settings);
+            //console.log($divElement);
             new plugin($divElement, $implementDiv, settings);
         }
     };
