@@ -87,8 +87,11 @@
             valueSelected: "",
             selectsFistOneByDefault: true,
             url: "",
+            searchingUrl: "?search=@searchingKeyword",
+            searchingVariable: "@searchingKeyword",
             delay: 250,
             nextPageUrl: "?Page=@pageNumber",
+            pagingVariableName: "@pageNumber",
             selfUI: false,
             isOptimized: true,
             additionalCSS: "",
@@ -134,8 +137,9 @@
                 inputHover: "jq-combo-hover",
                 comboHidden: "jq-combo-hidden",
                 combo: "jq-combo",
+                comboClick: "jq-combo-click",
                 comboOpen: "jq-combo-open",
-                comboHover: "jq-combo-hover",
+                comboHover: "jq-combo-hover-over",
                 styleSetName: "default-style",
                 listItem: "jq-combo-list-item",
                 requestSending: "jq-combo-requesting-to-server",
@@ -263,8 +267,8 @@
             { setting: "elementCreatingId", attr: "data-id" },
             { setting: "displayField", attr: "data-display-field" },
             { setting: "searchingField", attr: "data-searching-field" },
-            { setting: "isDependableCombo", attr: "data-value-field" },
-            { setting: "valueField", attr: "data-dependable" },
+            { setting: "valueField", attr: "data-value-field" },
+            { setting: "isDependableCombo", attr: "data-dependable" },
             { setting: "elementName", attr: "data-name" },
             { setting: "isPaginationEnable", attr: "data-pagination" },
             { setting: "totalItemsCountOnServer", attr: "data-total-items-count" },
@@ -324,16 +328,30 @@
                 render.input(this, $divElement, $implementDiv);
 
 
+
                 var $inputWrapper = render.$inputWrapper,
                     $input = render.$input;
 
                 // trigger events
                 this.setTriggerableEvents($divElement, $implementDiv, $inputWrapper, $input);
 
+                this.setDefaultInvalidSettings();
+
+                this.test();
+
             }
         },
 
-        
+        setDefaultInvalidSettings: function () {
+            /// <summary>
+            /// Set default values to settings if not set correctly.
+            /// </summary>
+            /// <returns type=""></returns>
+            var settings = this.getSettings();
+            if (isNaN(settings.currentPage)) {
+                settings.currentPage = 1;
+            }
+        },
         setPluginSubItems: function () {
             /// <summary>
             /// Sets 
@@ -430,13 +448,10 @@
             }
             return this.$input;
         },
-        getUrl: function () {
-            var settings = this.getSettings();
-            return settings.url;
-        },
+
         processDiv: function ($div, $implementDiv) {
             //var $self = $selfContainer;
-            var url = this.getUrl($implementDiv);
+            var url = this.retrieveData.getUrl();
             // this.test();
             // Task :
             // retrieve data.
@@ -447,7 +462,8 @@
             }
         },
         test: function () {
-            this.showSpinner($input);
+            //this.showSpinner($input);
+            this.retrieveData.getUrl();
         },
         setCurrentTextForNexttimeChecking: function ($input) {
             $input.attr("data-previous-submit", $input.val());
@@ -588,7 +604,9 @@
         },
         setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
             var triggerableEvents = this.triggerableEvents,
-                self = this;
+                self = this,
+                render = this.render,
+                $caretWrapper = render.$caretWrapper;
 
             $implement.hover(
                 function (e) {
@@ -600,15 +618,29 @@
                     triggerableEvents.implementHoverOut(self, $div, $implement, $inputWrapper, $input);
                 }
             );
+            $caretWrapper.hover(
+                function (e) {
+                    // in
+                    triggerableEvents.caretHoverIn(self, $div, $implement, $inputWrapper, $input, $caretWrapper, render);
+                },
+                function (e) {
+                    // out
+                    triggerableEvents.caretHoverOut(self, $div, $implement, $inputWrapper, $input, $caretWrapper, render);
+                }
+            ).click(function () {
+                triggerableEvents.caretClick(self, $div, $implement, $inputWrapper, $input, $caretWrapper, render);
+
+            });
+
         },
         triggerableEvents: {
             plugin: null,
-            divHoverIn: function(plugin, $div, $implement, $inputWrapper, $input) {
-            
+            divHoverIn: function (plugin, $div, $implement, $inputWrapper, $input) {
+
             },
             divHoverOut: function (plugin, $div, $implement, $inputWrapper, $input) {
-                
-            }, 
+
+            },
             implementHoverIn: function (plugin, $div, $implement, $inputWrapper, $input) {
                 var css = plugin.getCssClasses();
                 plugin.classAddRemove($div, css.comboHover);
@@ -617,14 +649,17 @@
                 var css = plugin.getCssClasses();
                 plugin.classAddRemove($div, null, css.comboHover);
             },
-            caretClick: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
-
+            caretClick: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
+                var css = plugin.getCssClasses();
+                plugin.classAddRemove($caretWrapper, null, css.comboHover);
             },
-            caretHoverIn: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
-
+            caretHoverIn: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
+                var css = plugin.getCssClasses();
+                plugin.classAddRemove($caretWrapper, css.comboHover);
             },
-            caretHoverOut: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper , render ) {
-
+            caretHoverOut: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
+                var css = plugin.getCssClasses();
+                plugin.classAddRemove($caretWrapper, null, css.comboHover);
             }
         },
 
@@ -632,7 +667,7 @@
             plugin: null,
             $inputWrapper: null,
             $input: null,
-            $caretWrapper : null,
+            $caretWrapper: null,
             inputWrapper: function (plugin, $div, $implement, idPrefixes, id, cssClass) {
                 /// <summary>
                 /// Render and get wrappers for input, along with caret wrapper and so on.
@@ -724,14 +759,15 @@
             }
         },
         ajax: {
+            // only the data from the given url.
             plguin: null,
-
+            ajaxRequest: null,
             abortPrevious: function () {
                 /// <summary>
                 /// Abort previous ajax request and hide all the icons
                 /// </summary>
                 /// <returns type=""></returns>
-                if (!this.isEmpty(this.ajaxRequest)) {
+                if (!this.plguin.isEmpty(this.ajaxRequest)) {
                     this.ajaxRequest.abort();
                 }
             },
@@ -841,7 +877,86 @@
             }
         },
         retrieveData: {
+            // route and configure url and then get the data from the url.
             plguin: null,
+            setPage: function (pageNumber) {
+
+            },
+            getUrlRegularPaged: function (plugin, settings) {
+                var currentPage = settings.currentPage,
+                    nextUrl = settings.nextPageUrl,
+                    nextPageVariable = settings.nextPageVariable;
+                var newNextPageUrl = settings.url + nextUrl.replace(nextPageVariable, currentPage);
+                if (plugin.isDebugging) {
+                    console.log("Paged url:");
+                    console.log(newNextPageUrl);
+                }
+                return newNextPageUrl;
+            },
+            getUrlODataPaged: function (plugin, settings) {
+                var currentPage = settings.currentPage,
+                    searchingElements = [],
+                    top = "$top=" + settings.pageSize,
+                    skipNumber = (currentPage - 1) * settings.pageSize,
+                    skip = "$skip=" + skipNumber,
+                    count = "$inlinecount=allpages",
+                    select = "$select=" + settings.displayField + "," + settings.valueField + "," + settings.searchingField;
+
+                searchingElements.push(top);
+                if (skipNumber > 0) {
+                    searchingElements.push(skip);
+                }
+                searchingElements.push(count);
+                if (settings.isOptimized) {
+                    searchingElements.push(select);
+                }
+
+                var queryString = searchingElements.join("&");
+
+
+                var newNextPageUrl = settings.url;
+                if (newNextPageUrl[newNextPageUrl.length - 1] !== '?') {
+                    newNextPageUrl += '?';
+                }
+
+                newNextPageUrl += queryString;
+
+
+                if (plugin.isDebugging) {
+                    console.log("Paged url:");
+                    console.log(newNextPageUrl);
+                }
+                return newNextPageUrl;
+            },
+       
+            getUrl: function () {
+                /// <summary>
+                /// Gets the right url based on odata or paged or anything.
+                /// </summary>
+                /// <returns type="">Returns the right url based on odata or paged or anything based on settings.</returns>
+                var plugin = this.plguin,
+                    settings = plugin.getSettings();
+
+                var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
+                    isRegularPaged = settings.isPaginationEnable && !settings.isOdata,
+                    isOdataOnly = !settings.isPaginationEnable && settings.isOdata && !settings.isOdataPagefromServer,
+                    isOdataPaged = settings.isPaginationEnable && settings.isOdata && !settings.isOdataPagefromServer,
+                    isOdataPagedServer = settings.isPaginationEnable && settings.isOdata && settings.isOdataPagefromServer;
+
+
+                if (isRegularUrl || isOdataOnly) {
+                    // retrieve data from direct url.
+                    return settings.url;
+                } else if (isRegularPaged) {
+                    return this.getUrlRegularPaged(plugin, settings);
+                } else if (isOdataPaged || isOdataPagedServer) {
+                    return this.getUrlODataPaged(plugin, settings);
+                //} else if (isOdataPagedServer) {
+                //    return this.getUrlODataPagedServer(plugin, settings);
+                }
+
+                return null;
+            },
             getRegularData: function (url) {
                 var plguin = this.plguin,
                     ajax = plugin.ajax;

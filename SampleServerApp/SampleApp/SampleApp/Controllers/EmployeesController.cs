@@ -25,7 +25,7 @@ namespace SampleApp.Controllers
         private SampleDbEntities db = new SampleDbEntities();
 
         // GET: odata/Employees
-        [EnableQuery(PageSize = 5)]
+        [EnableQuery(PageSize = 30)]
         public IQueryable<Employee> GetEmployees()
         {
             return db.Employees;
