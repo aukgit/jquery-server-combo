@@ -209,8 +209,6 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\ProductsController.cs" />
-    <Compile Include="Controllers\ProductsODataController.cs" />
-    <Compile Include="Controllers\RegEmployeeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

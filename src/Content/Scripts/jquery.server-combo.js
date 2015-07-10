@@ -365,6 +365,7 @@
             this.ajax.plguin = this;
             this.render.plguin = this;
             this.triggerableEvents.plguin = this;
+            this.pagination.plguin = this;
         },
         getSettings: function () {
             return this.settings;
@@ -451,19 +452,19 @@
 
         processDiv: function ($div, $implementDiv) {
             //var $self = $selfContainer;
-            var url = this.retrieveData.getUrl();
+            //var url = this.retrieveData.getUrl();
             // this.test();
             // Task :
             // retrieve data.
             // then render UI
-            this.retrieveData.get(url);
+            //this.retrieveData.get(url);
             if (settings.selfUI === false) {
 
             }
         },
         test: function () {
             //this.showSpinner($input);
-            this.retrieveData.getUrl();
+            this.pagination.getUrl();
         },
         setCurrentTextForNexttimeChecking: function ($input) {
             $input.attr("data-previous-submit", $input.val());
@@ -602,7 +603,18 @@
                 $element.removeClass(remove);
             }
         },
+        /**
+         * Calls all the events bindings
+         */
         setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
+            /// <summary>
+            /// Calls all the events binding.
+            /// </summary>
+            /// <param name="$div"></param>
+            /// <param name="$implement"></param>
+            /// <param name="$inputWrapper"></param>
+            /// <param name="$input"></param>
+            /// <returns type=""></returns>
             var triggerableEvents = this.triggerableEvents,
                 self = this,
                 render = this.render,
@@ -876,17 +888,17 @@
                 }
             }
         },
-        retrieveData: {
-            // route and configure url and then get the data from the url.
-            plguin: null,
+
+        //contains url methods and pagination.
+        pagination: {
             setPage: function (pageNumber) {
 
             },
             getUrlRegularPaged: function (plugin, settings) {
                 var currentPage = settings.currentPage,
                     nextUrl = settings.nextPageUrl,
-                    nextPageVariable = settings.nextPageVariable;
-                var newNextPageUrl = settings.url + nextUrl.replace(nextPageVariable, currentPage);
+                    nextPageVariable = settings.pagingVariableName;
+                var newNextPageUrl = nextUrl.replace(nextPageVariable, currentPage);
                 if (plugin.isDebugging) {
                     console.log("Paged url:");
                     console.log(newNextPageUrl);
@@ -928,7 +940,6 @@
                 }
                 return newNextPageUrl;
             },
-       
             getUrl: function () {
                 /// <summary>
                 /// Gets the right url based on odata or paged or anything.
@@ -951,12 +962,18 @@
                     return this.getUrlRegularPaged(plugin, settings);
                 } else if (isOdataPaged || isOdataPagedServer) {
                     return this.getUrlODataPaged(plugin, settings);
-                //} else if (isOdataPagedServer) {
-                //    return this.getUrlODataPagedServer(plugin, settings);
+                    //} else if (isOdataPagedServer) {
+                    //    return this.getUrlODataPagedServer(plugin, settings);
                 }
 
                 return null;
-            },
+            }
+        },
+
+        retrieveData: {
+            // route and configure url and then get the data from the url.
+            plguin: null,
+
             getRegularData: function (url) {
                 var plguin = this.plguin,
                     ajax = plugin.ajax;
