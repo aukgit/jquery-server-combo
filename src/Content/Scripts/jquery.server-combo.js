@@ -297,8 +297,54 @@
         currentPageData: null,
         selectedData: null,
         $input: null,
-
+        $implementDiv: null,
+        $element: null,
         isDebugging: true,
+        processingCategory: {
+            plugin: null,
+            currentCategory: 1,
+            regularUrl: 1,
+            regularPagedUrl: 2,
+            OdataUrl: 3,
+            OdataPagedUrl: 4,
+
+            get: function() {
+                return this.currentCategory;
+            },
+            set: function(category) {
+                this.currentCategory = category;
+            },
+            isRegular: function() {
+                return this.get() === this.regularUrl;
+            },
+            isRegularPaged: function() {
+                return this.get() === this.regularPagedUrl;
+            },
+            isOdata: function() {
+                return this.get() === this.OdataUrl;
+            },
+            isOdataPaged: function() {
+                return this.get() === this.OdataPagedUrl;
+            },
+            init: function() {
+                var plugin = this.plguin,
+                    settings = plugin.getSettings();
+
+                var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
+                    isRegularPaged = settings.isPaginationEnable && !settings.isOdata,
+                    isOdataOnly = !settings.isPaginationEnable && settings.isOdata,
+                    isOdataPaged = settings.isPaginationEnable && settings.isOdata;
+                if (isRegularUrl === true) {
+                    this.set(this.regularUrl);
+                } else if (isRegularPaged === true) {
+                    this.set(this.regularPagedUrl);
+                } else if (isOdataOnly === true) {
+                    this.set(this.OdataUrl);
+                } else if (isOdataPaged === true) {
+                    this.set(this.OdataPagedUrl);
+                }
+            }
+        },
         isEmpty: function (variable) {
             return variable === null || variable === undefined || variable.length === 0;
         },
@@ -310,6 +356,8 @@
 
                 // sets this plugin to it's sub items.
                 this.setPluginSubItems();
+                // sets the processing category
+                this.processingCategory.init();
 
                 this.processDiv($divElement, $implementDiv);
 
@@ -366,6 +414,7 @@
             this.render.plguin = this;
             this.triggerableEvents.plguin = this;
             this.pagination.plguin = this;
+            this.processingCategory.plguin = this;
         },
         getSettings: function () {
             return this.settings;
@@ -603,6 +652,8 @@
                 $element.removeClass(remove);
             }
         },
+
+
         /**
          * Calls all the events bindings
          */
@@ -823,8 +874,9 @@
                 /// <returns type=""></returns>
                 var plugin = this.plguin,
                     method = plugin.getSubmitMethod(),
-                    isInTestingMode = plugin.isDebugging,
-                    events = plugin.getSettings().events;
+                    settings = plugin.getSettings(),
+                    events = settings.events,
+                    isCrossDomain = settings.crossDomain;
                 if (!this.isEmpty(events.beforeSendingRequest)) {
                     //events.beforeSendingRequest($div, $input, url, sendingFields);
                 }
@@ -840,7 +892,7 @@
                     method: method, // by default "GET"
                     url: url,
                     data: sendingFields, // PlainObject or String or Array
-                    crossDomain: true,
+                    crossDomain: isCrossDomain,
                     dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
                 });
 
@@ -848,6 +900,8 @@
 
                 this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
                     this.removeClassAfterSendingRequest();
+                    plugin.markAsProcessing($div, false);
+
                     //self.hideSpinner($input);
                     self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
                     console.log("Request failed: " + exceptionMessage + ". Url : " + url);
@@ -855,10 +909,13 @@
             },
             dataReceived: function (response) {
                 var plugin = this.plguin,
+                    $div = this.$element,
+                    $implement = this.$implementDiv,
                     method = plugin.getSubmitMethod(),
                     isInTestingMode = plugin.isDebugging,
                     events = plugin.getSettings().events;
                 this.removeClassAfterSendingRequest();
+                plugin.markAsProcessing($div, false);
                 if (isInTestingMode) {
                     console.log(response);
                 }
@@ -950,12 +1007,13 @@
                 /// </summary>
                 /// <returns type="">Returns the right url based on odata or paged or anything based on settings.</returns>
                 var plugin = this.plguin,
-                    settings = plugin.getSettings();
+                    settings = plugin.getSettings(),
+                    category = plugin.processingCategory;
 
-                var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
-                    isRegularPaged = settings.isPaginationEnable && !settings.isOdata,
-                    isOdataOnly = !settings.isPaginationEnable && settings.isOdata,
-                    isOdataPaged = settings.isPaginationEnable && settings.isOdata;
+                var isRegularUrl = category.isRegular(),
+                    isRegularPaged = category.isRegularPaged(),
+                    isOdataOnly = category.isOdata(),
+                    isOdataPaged = category.isOdataPaged();
 
 
                 if (isRegularUrl) {
@@ -984,7 +1042,6 @@
                 var plguin = this.plguin,
                     ajax = plugin.ajax;
                 //ajax.sendRequest()
-
             },
             get: function (url) {
                 /// <summary>
