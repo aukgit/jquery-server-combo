@@ -28,7 +28,12 @@ namespace SampleApp.Controllers
                 ItemsInPage = 30
             };
             var paged = products.GetPageData(pageInfo, "Products.Get.Count");
-            return Json(paged, JsonRequestBehavior.AllowGet);
+            var newPaged = paged.ToList().Select(n => new {
+                n.ProductID,
+                n.ProductName,
+                Dated = n.Dated.ToString("dd-MMM-yyyy")
+            });
+            return Json(newPaged, JsonRequestBehavior.AllowGet);
         }
 
         protected override void Dispose(bool disposing)

@@ -912,12 +912,16 @@
                     skipNumber = (currentPage - 1) * settings.pageSize,
                     skip = "$skip=" + skipNumber,
                     count = "$inlinecount=allpages",
-                    select = "$select=" + settings.displayField + "," + settings.valueField + "," + settings.searchingField;
+                    select = "$select=" + settings.displayField + "," + settings.valueField + "," + settings.searchingField,
+                    isPagination = settings.isPaginationEnable;
 
-                searchingElements.push(top);
-                if (skipNumber > 0) {
-                    searchingElements.push(skip);
+                if (isPagination) {
+                    searchingElements.push(top);
+                    if (skipNumber > 0) {
+                        searchingElements.push(skip);
+                    }
                 }
+
                 searchingElements.push(count);
                 if (settings.isOptimized) {
                     searchingElements.push(select);
@@ -950,17 +954,19 @@
 
                 var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
                     isRegularPaged = settings.isPaginationEnable && !settings.isOdata,
-                    isOdataOnly = !settings.isPaginationEnable && settings.isOdata && !settings.isOdataPagefromServer,
-                    isOdataPaged = settings.isPaginationEnable && settings.isOdata && !settings.isOdataPagefromServer,
-                    isOdataPagedServer = settings.isPaginationEnable && settings.isOdata && settings.isOdataPagefromServer;
+                    isOdataOnly = !settings.isPaginationEnable && settings.isOdata,
+                    isOdataPaged = settings.isPaginationEnable && settings.isOdata;
 
 
-                if (isRegularUrl || isOdataOnly) {
+                if (isRegularUrl) {
                     // retrieve data from direct url.
                     return settings.url;
+                } else if (isOdataOnly) {
+                    // retrieve data from direct url.
+                    return this.getUrlODataPaged(plugin, settings);
                 } else if (isRegularPaged) {
                     return this.getUrlRegularPaged(plugin, settings);
-                } else if (isOdataPaged || isOdataPagedServer) {
+                } else if (isOdataPaged) {
                     return this.getUrlODataPaged(plugin, settings);
                     //} else if (isOdataPagedServer) {
                     //    return this.getUrlODataPagedServer(plugin, settings);
