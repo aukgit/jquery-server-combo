@@ -141,7 +141,8 @@
                 comboOpen: "jq-combo-open",
                 comboHover: "jq-combo-hover-over",
                 styleSetName: "default-style",
-                listItem: "jq-combo-list-item",
+                listItem: "", // jq-combo-list-item
+                list: "jq-combo-list",
                 requestSending: "jq-combo-requesting-to-server",
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
@@ -155,6 +156,7 @@
                 spinner: "validation-spinner-",
                 error: "validation-error-",
                 input: "jq-input-",
+                list: "jq-combo-list-",
                 wrapper1: "first-wrapper-",
                 wrapper2: "second-wrapper-",
                 wrapper3: "third-wrapper-",
@@ -170,6 +172,7 @@
             events: {
                 iconCreated: function ($div, $input, $iconContainer) { },
                 inputCreated: function (plugin, $div, $implementDiv, $input) { },
+                listCreated: function (plugin, $div, $implementDiv, $input, data) { },
                 sameRequestTwice: function ($div, $input, url, previousText) { },
                 beforeSendingRequest: function ($div, $input, url) { },
                 responseReceived: function ($div, $input, response) { },
@@ -308,26 +311,26 @@
             OdataUrl: 3,
             OdataPagedUrl: 4,
 
-            get: function() {
+            get: function () {
                 return this.currentCategory;
             },
-            set: function(category) {
+            set: function (category) {
                 this.currentCategory = category;
             },
-            isRegular: function() {
+            isRegular: function () {
                 return this.get() === this.regularUrl;
             },
-            isRegularPaged: function() {
+            isRegularPaged: function () {
                 return this.get() === this.regularPagedUrl;
             },
-            isOdata: function() {
+            isOdata: function () {
                 return this.get() === this.OdataUrl;
             },
-            isOdataPaged: function() {
+            isOdataPaged: function () {
                 return this.get() === this.OdataPagedUrl;
             },
-            init: function() {
-                var plugin = this.plguin,
+            init: function () {
+                var plugin = this.plugin,
                     settings = plugin.getSettings();
 
                 var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
@@ -348,7 +351,6 @@
         isEmpty: function (variable) {
             return variable === null || variable === undefined || variable.length === 0;
         },
-
         init: function ($divElement, $implementDiv) {
             if (this.isProcessingRequired()) {
                 var css = this.getCssClasses(),
@@ -389,7 +391,6 @@
 
             }
         },
-
         setDefaultInvalidSettings: function () {
             /// <summary>
             /// Set default values to settings if not set correctly.
@@ -403,18 +404,18 @@
         setPluginSubItems: function () {
             /// <summary>
             /// Sets 
-            /// this.retrieveData.plguin = this;
-            /// this.ajax.plguin = this;
-            /// this.render.plguin = this;
+            /// this.retrieveData.plugin = this;
+            /// this.ajax.plugin = this;
+            /// this.render.plugin = this;
             /// ...
             /// </summary>
             /// <returns type=""></returns>
-            this.retrieveData.plguin = this;
-            this.ajax.plguin = this;
-            this.render.plguin = this;
-            this.triggerableEvents.plguin = this;
-            this.pagination.plguin = this;
-            this.processingCategory.plguin = this;
+            this.retrieveData.plugin = this;
+            this.ajax.plugin = this;
+            this.render.plugin = this;
+            this.triggerableEvents.plugin = this;
+            this.pagination.plugin = this;
+            this.processingCategory.plugin = this;
         },
         getSettings: function () {
             return this.settings;
@@ -498,17 +499,37 @@
             }
             return this.$input;
         },
-
+        getDiv: function () {
+            /// <summary>
+            /// Get the whole container div
+            /// </summary>
+            /// <returns type=""></returns>
+            return this.$element;
+        },
+        getImplement: function () {
+            /// <summary>
+            /// Get the whole container div
+            /// </summary>
+            /// <returns type=""></returns>
+            return this.$implementDiv;
+        },
         processDiv: function ($div, $implementDiv) {
             //var $self = $selfContainer;
-            //var url = this.retrieveData.getUrl();
+            var url = this.pagination.getUrl();
             // this.test();
             // Task :
             // retrieve data.
             // then render UI
             //this.retrieveData.get(url);
-            if (settings.selfUI === false) {
+            var retrieval = this.retrieveData,
+                settings = this.getSettings();
 
+            if (settings.selfUI === false) {
+                // this request method goes through ajax request and then
+                // moves to retrieval.process method 
+                // which again renders list and list items and 
+                // sets the plugin data.
+                retrieval.request(this, url);
             }
         },
         test: function () {
@@ -654,9 +675,7 @@
         },
 
 
-        /**
-         * Calls all the events bindings
-         */
+        //Calls all the events bindings
         setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
             /// <summary>
             /// Calls all the events binding.
@@ -731,6 +750,7 @@
             $inputWrapper: null,
             $input: null,
             $caretWrapper: null,
+            $list: null,
             inputWrapper: function (plugin, $div, $implement, idPrefixes, id, cssClass) {
                 /// <summary>
                 /// Render and get wrappers for input, along with caret wrapper and so on.
@@ -742,22 +762,12 @@
                 /// <param name="idPrefixes">Id prefix object from the settings</param>
                 /// <param name="id">Send the id of the input</param>
                 /// <returns type=""></returns>
-                var elementName = "$inputWrapper";
+                var elementName = "$inputWrapper",
+                    typeObject = "input";
 
                 if (plugin.isEmpty(this[elementName])) {
-                    var wrapper1 = idPrefixes.wrapper1 + id,
-                        wrapper2 = idPrefixes.wrapper2 + id,
-                        dropDownIconId = "dropdown-icon-" + id,
+                    var dropDownIconId = "dropdown-icon-" + id,
                         dropDownIconWrapperId = "dropdown-wrapper-icon-" + id,
-
-                        $divWrapper1 = $("<div></div>", {
-                            id: wrapper1,
-                            'class': cssClass.wrapper1
-                        }),
-                        $divWrapper2 = $("<div></div>", {
-                            id: wrapper2,
-                            'class': cssClass.wrapper2
-                        }),
                         $iconWrapper = $("<span></span>", {
                             id: dropDownIconWrapperId,
                             'class': "dropdown-wrapper-icon"
@@ -767,26 +777,28 @@
                             'class': "dropdown-icon fa fa-caret-down"
                         });
                     $icon.appendTo($iconWrapper);
-                    $iconWrapper.appendTo($divWrapper2);
-                    $divWrapper2.appendTo($divWrapper1);
-                    $divWrapper1.appendTo($implement);
+                    var $wrapper = this.createWrapper($implement, typeObject, $iconWrapper, 2);
                     this.$caretWrapper = $.byId(dropDownIconWrapperId);
-                    this[elementName] = $.byId(wrapper2);
+                    this[elementName] = $wrapper;
                 }
                 return this[elementName];
             },
             input: function (plugin, $div, $implement) {
                 /// <summary>
                 /// Get input from cache or else create it and then return.
-                /// also sets plugin.$input = returned input
+                /// also sets plugin.$input = returned input 
                 /// </summary>
-                /// <returns type="">$input box</returns>
+                /// <param name="plugin"></param>
+                /// <param name="$div"></param>
+                /// <param name="$implement"></param>
+                /// <returns type=""></returns>
                 var cssClass = plugin.getCssClasses(),
                     settings = plugin.getSettings(),
                     ids = plugin.getIdPrefixes(),
                     id = plugin.getID(),
                     finalId = ids.input + id,
-                    events = plugin.getEvents();
+                    events = plugin.getEvents(),
+                    wraperType = "input";
 
                 var elementName = "$input";
 
@@ -806,31 +818,208 @@
                         'data-placeholder-val': placeHolderValue,
                         'data-is-placeholder': isPlaceHolder
                     });
-                    var $inputWrapper = this.inputWrapper(plugin, $div, $implement, ids, id, cssClass);
-
+                    // create input wrapper and caret wrapper and caret
+                    // using the createWrapper function
+                    // by default it returns the top wrapper with level 2.
+                    this.inputWrapper(plugin, $div, $implement, ids, id, cssClass);
+                    var $inputWrapper = this.getWrapper(wraperType, 2);
                     $inputHtml.prependTo($inputWrapper);
 
                     this[elementName] = $.byId(finalId);
                     if (plugin.isDebugging) {
-                        console.log(this.$input);
+                        console.log(this[elementName]);
                     }
                     events.inputCreated(plugin, $div, $implement, this[elementName]);
-                    plugin[elementName] = this[elementName];
+                    //plugin[elementName] = this[elementName];
                 }
 
                 return this[elementName];
+            },
+            clearList: function () {
+                /// <summary>
+                /// Clear the $list (unordered list by the given data) items
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <returns type=""></returns>
+                var $list = this.$list;
+                $list.empty();
+            },
+            getList: function () {
+                return this.$list;
+            },
+            getWrapper: function (type, level) {
+                /// <summary>
+                /// Returns a wrapper if exist by that type and level.
+                /// </summary>
+                /// <param name="type"></param>
+                /// <param name="level"></param>
+                /// <returns type=""></returns>
+                var plugin = this.plugin,
+                   ids = plugin.getIdPrefixes(),
+                   id = plugin.getID(),
+                   typeObject = type + "-"; // "input-"
+                var wrapperIds = new Array(5);
+
+                wrapperIds[1] = ids.wrapper1 + typeObject + id;
+                wrapperIds[2] = ids.wrapper2 + typeObject + id;
+                wrapperIds[3] = ids.wrapper3 + typeObject + id;
+                wrapperIds[4] = ids.wrapper4 + typeObject + id;
+
+                return $.byId(wrapperIds[level]);
+            },
+            // Create wrapper and inject into implement.
+            createWrapper: function ($implement, objectTypeName, $wrappingObject, level) {
+                /// <summary>
+                /// Creates and returns the final wrapper object.
+                /// Wrap the onject with wrapper and inject into the implement.
+                /// </summary>
+                /// <param name="$implement"></param>
+                /// <param name="objectTypeName"></param>
+                /// <param name="$wrappingObject"></param>
+                /// <param name="level">By default level: 2</param>
+                /// <returns type=""></returns>
+                var plugin = this.plugin,
+                    cssClass = plugin.getCssClasses(),
+                    ids = plugin.getIdPrefixes(),
+                    id = plugin.getID(),
+                    typeObject = objectTypeName + "-"; // "input-"
+                var wrapper1 = ids.wrapper1 + typeObject + id,
+                    wrapper2 = ids.wrapper2 + typeObject + id,
+                    wrapper3 = ids.wrapper3 + typeObject + id,
+                    wrapper4 = ids.wrapper4 + typeObject + id;
+
+                if (plugin.isEmpty(level)) {
+                    level = 2;
+                }
+
+                var $divWrapper1 = $("<div></div>", {
+                    id: wrapper1,
+                    'class': cssClass.wrapper1
+                }),
+                    $divWrapper2 = $("<div></div>", {
+                        id: wrapper2,
+                        'class': cssClass.wrapper2
+                    }),
+                    $divWrapper3 = $("<div></div>", {
+                        id: wrapper3,
+                        'class': cssClass.wrapper3
+                    }),
+                    $divWrapper4 = $("<div></div>", {
+                        id: wrapper4,
+                        'class': cssClass.wrapper4
+                    });
+
+                if (level === 4) {
+                    $wrappingObject.appendTo($divWrapper4);
+                    $divWrapper4.appendTo($divWrapper3);
+                    $divWrapper3.appendTo($divWrapper2);
+                    $divWrapper2.appendTo($divWrapper1);
+                    $divWrapper1.appendTo($implement);
+                } else if (level === 3) {
+                    $wrappingObject.appendTo($divWrapper3);
+                    $divWrapper3.appendTo($divWrapper2);
+                    $divWrapper2.appendTo($divWrapper1);
+                    $divWrapper1.appendTo($implement);
+                } else if (level === 2) {
+                    $wrappingObject.appendTo($divWrapper2);
+                    $divWrapper2.appendTo($divWrapper1);
+                    $divWrapper1.appendTo($implement);
+                } else if (level === 1) {
+                    $wrappingObject.appendTo($divWrapper1);
+                    $divWrapper1.appendTo($implement);
+                }
+                return $divWrapper1;
+            },
+            list: function (plugin, $div, $implement) {
+                /// <summary>
+                /// Renders and gets the $list (unordered list by the given data)
+                /// Calls from retriveData json's get method.
+                /// </summary>
+                /// <returns type="">$input box</returns>
+                var cssClass = plugin.getCssClasses(),
+                    ids = plugin.getIdPrefixes(),
+                    id = plugin.getID(),
+                    finalId = ids.list + id,
+                    events = plugin.getEvents(),
+                    typeObject = "list";
+
+                var elementName = "$list",
+                    $elem = this[elementName];
+
+                if (plugin.isEmpty($elem)) {
+                    // if empty then create
+                    var $listHtml = $("<ul></ul>", {
+                        id: finalId,
+                        'class': cssClass.list + " " // hide
+                    });
+                    // creates the wrapper and injects into the $implement.
+                    this.createWrapper($implement, typeObject, $listHtml);
+
+                    this[elementName] = $.byId(finalId);
+                    $elem = this[elementName];
+
+                    if (plugin.isDebugging) {
+                        console.log($elem);
+                    }
+                    events.listCreated(plugin, $div, $implement, $elem);
+                    //plugin[elementName] = $elem;
+                }
+
+                // clear the list
+
+                // process data
+
+                return $elem;
+            },
+            listItems: function (plugin, data) {
+                /// <summary>
+                /// Renders the list items under $list(underscored list)
+                /// clears the list if no data exist.
+                /// </summary>
+                /// <param name="$list">$list(underscored list)</param>
+                /// <param name="data">json data</param>
+                /// <returns type="">none</returns>
+                this.clearList();
+                if (plugin.isEmpty(data)) {
+                    return;
+                }
+                var cssClass = plugin.getCssClasses(),
+                    settings = plugin.getSettings(),
+                    events = plugin.getEvents(),
+                    len = data.length,
+                    idField = settings.valueField,
+                    displayField = settings.displayField,
+                    arrayList = new Array(len + 5),
+                    itemCss = cssClass.listItem,
+                    isClassExist = !plugin.isEmpty(itemCss),
+                    $list = this.getList();
+
+                for (var i = 0; i < len; i++) {
+                    var row = data[i],
+                        id = row[idField],
+                        display = row[displayField];
+                    if (isClassExist) {
+                        arrayList[i] = "<li class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
+                    } else {
+                        // no class
+                        arrayList[i] = "<li data-id='" + id + "'>" + display + "</li>";
+                    }
+                }
+
+                var ulContents = arrayList.join("");
+                $list.html(ulContents);
             }
         },
         ajax: {
             // only the data from the given url.
-            plguin: null,
+            plugin: null,
             ajaxRequest: null,
             abortPrevious: function () {
                 /// <summary>
                 /// Abort previous ajax request and hide all the icons
                 /// </summary>
                 /// <returns type=""></returns>
-                if (!this.plguin.isEmpty(this.ajaxRequest)) {
+                if (!this.plugin.isEmpty(this.ajaxRequest)) {
                     this.ajaxRequest.abort();
                 }
             },
@@ -838,7 +1027,7 @@
                 /// <summary>
                 /// add class while sending or processing the ajax request.
                 /// </summary>
-                var plugin = this.plguin,
+                var plugin = this.plugin,
                     $implement = plugin.$implementDiv,
                     $div = plugin.$element,
                     settings = plugin.getSettings(),
@@ -851,7 +1040,7 @@
                 /// <summary>
                 /// remove class after sending or processing the ajax request.
                 /// </summary>
-                var plugin = this.plguin,
+                var plugin = this.plugin,
                     $implement = plugin.$implementDiv,
                     $div = plugin.$element,
                     settings = plugin.getSettings(),
@@ -863,23 +1052,25 @@
             beforeSend: function ($implement, $input, url, sendingFields) {
 
             },
-            sendRequest: function ($div, $implement, url, sendingFields) {
+            sendRequest: function (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields) {
                 /// <summary>
-                /// 
+                /// Sends the ajax request and binds with done and error methods to route to.
                 /// </summary>
+                /// <param name="plugin">json plugin</param>
+                /// <param name="render">json plugin</param>
+                /// <param name="retrieveData">retrieveData json plugin</param>
                 /// <param name="$div"></param>
                 /// <param name="$implement"></param>
                 /// <param name="url"></param>
                 /// <param name="sendingFields"></param>
                 /// <returns type=""></returns>
-                var plugin = this.plguin,
-                    method = plugin.getSubmitMethod(),
+                var method = plugin.getSubmitMethod(),
                     settings = plugin.getSettings(),
+                    isDebugging = plugin.isDebugging,
                     events = settings.events,
-                    isCrossDomain = settings.crossDomain;
-                if (!this.isEmpty(events.beforeSendingRequest)) {
-                    //events.beforeSendingRequest($div, $input, url, sendingFields);
-                }
+                    isCrossDomain = settings.crossDomain,
+                    self = this;
+
 
                 // Abort previous ajax request and hide all the icons
                 this.abortPrevious();
@@ -896,56 +1087,26 @@
                     dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
                 });
 
-                this.ajaxRequest.done(this.dataReceived);
+                this.ajaxRequest.done(function (response) {
+                    // stop processing marks
+                    self.removeClassAfterSendingRequest();
+                    plugin.markAsProcessing($div, false);
+                    if (isDebugging) {
+                        console.log(response);
+                    }
+                    retrieveData.process(plugin, render, $div, $implement, $input, response);
+                });
 
                 this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
-                    this.removeClassAfterSendingRequest();
+                    self.removeClassAfterSendingRequest();
                     plugin.markAsProcessing($div, false);
 
                     //self.hideSpinner($input);
-                    self.errorProcess($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                    retrieveData.errorProcess(plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url);
                     console.log("Request failed: " + exceptionMessage + ". Url : " + url);
                 });
-            },
-            dataReceived: function (response) {
-                var plugin = this.plguin,
-                    $div = this.$element,
-                    $implement = this.$implementDiv,
-                    method = plugin.getSubmitMethod(),
-                    isInTestingMode = plugin.isDebugging,
-                    events = plugin.getSettings().events;
-                this.removeClassAfterSendingRequest();
-                plugin.markAsProcessing($div, false);
-                if (isInTestingMode) {
-                    console.log(response);
-                }
-
-            },
-            errorProcess: function ($div, $input, jqXHR, textStatus, exceptionMessage, url) {
-                var code = jqXHR.status,
-                    settings = this.getSettings(),
-                    events = settings.events,
-                    msg = "";
-
-                if (code === 0) {
-                    code = 404;
-                    textStatus = "Requested url doesn't lead to a valid request.";
-                }
-                msg = "Code " + code + " : " + textStatus;
-
-                //console.log(jqXHR);
-                //console.log(textStatus);
-                //icons show/hide
-                this.showErrorIcon($input, msg);
-                if (settings.focusPersistIfNotValid) {
-                    this.focusIfnotValid($input, true);
-                }
-                if (!this.isEmpty(events.onError)) {
-                    events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
-                }
             }
         },
-
         //contains url methods and pagination.
         pagination: {
             setPage: function (pageNumber) {
@@ -1006,7 +1167,7 @@
                 /// Gets the right url based on odata or paged or anything.
                 /// </summary>
                 /// <returns type="">Returns the right url based on odata or paged or anything based on settings.</returns>
-                var plugin = this.plguin,
+                var plugin = this.plugin,
                     settings = plugin.getSettings(),
                     category = plugin.processingCategory;
 
@@ -1036,14 +1197,13 @@
 
         retrieveData: {
             // route and configure url and then get the data from the url.
-            plguin: null,
-
+            plugin: null,
             getRegularData: function (url) {
-                var plguin = this.plguin,
+                var plugin = this.plugin,
                     ajax = plugin.ajax;
                 //ajax.sendRequest()
             },
-            get: function (url) {
+            request: function (plugin, url) {
                 /// <summary>
                 /// Retrieve data as per necessary.
                 /// Decide weather if :
@@ -1051,15 +1211,67 @@
                 /// it is also paged data from non odata source also retrieve it.
                 /// Or anything else..
                 /// Route point of getting the data.
+                /// Finally it leads to the next method process
                 /// </summary>
                 /// <param name="url"></param>
                 /// <returns type=""></returns>
-                var plguin = this.plguin;
+                var ajax = plugin.ajax,
+                    render = plugin.render,
+                    $div = plugin.getDiv(),
+                    $implement = plugin.getImplement(),
+                    $input = render.$input;
+                //(plugin, render, retrieveData, $div, $implement, $input, url, sendingFields)
+                ajax.sendRequest(plugin, render, this, $div, $implement, $input, url, null);
+            },
+            process: function (plugin, render, $div, $implement, $input, response) {
+                /// <summary>
+                /// Calls from ajax.sendRequest() when the request is done.
+                /// Sets data to received data.
+                /// Process the retrieved data.
+                /// </summary>
+                /// <param name="plugin">plugin</param>
+                /// <param name="render">Render json</param>
+                /// <param name="$div">$element</param>
+                /// <param name="$implement">$implement div</param>
+                /// <param name="$input"></param>
+                /// <param name="response"></param>
+                /// <returns type=""></returns>
 
-                //console.log(plguin);
-                //console.log(this);
-                //console.log(url);
-                //console.log(plguin.getSettings());
+                var plugin = this.plugin,
+                    settings = plugin.getSettings(),
+                    category = plugin.processingCategory;
+
+                var isRegularUrl = category.isRegular(),
+                    isRegularPaged = category.isRegularPaged(),
+                    isOdataOnly = category.isOdata(),
+                    isOdataPaged = category.isOdataPaged();
+
+                render.list(plugin, $div, $implement);
+                render.listItems(plugin, response); // clears before populate
+
+            },
+            errorProcess: function (plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url) {
+                var code = jqXHR.status,
+                    settings = this.getSettings(),
+                    events = settings.events,
+                    msg = "";
+
+                if (code === 0) {
+                    code = 404;
+                    textStatus = "Requested url doesn't lead to a valid request.";
+                }
+                msg = "Code " + code + " : " + textStatus;
+
+                //console.log(jqXHR);
+                //console.log(textStatus);
+                //icons show/hide
+                this.showErrorIcon($input, msg);
+                if (settings.focusPersistIfNotValid) {
+                    this.focusIfnotValid($input, true);
+                }
+                if (!this.isEmpty(events.onError)) {
+                    events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                }
             }
         }
 

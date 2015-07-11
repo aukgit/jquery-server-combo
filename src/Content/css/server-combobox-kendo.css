@@ -1,0 +1,12 @@
+﻿.jq-server-combo.default-style .dropdown-wrapper-icon {
+  color: #a5a5a5;
+}
+.jq-server-combo.default-style .dropdown-wrapper-icon:hover {
+  color: #52adfd;
+}
+.jq-server-combo.default-style.jq-combo-hover-over .jq-combo-input {
+  -webkit-box-shadow: 0 2px 6px rgba(0,0,0,0.2),0 2px 3px rgba(0,0,0,0.05);
+  -moz-box-shadow: 0 2px 6px rgba(0,0,0,0.2),0 2px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2),0 2px 3px rgba(0,0,0,0.05);
+}
+/*# sourceMappingURL=server-combobox-kendo.css.map */

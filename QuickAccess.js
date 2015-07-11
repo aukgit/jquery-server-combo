@@ -85,7 +85,8 @@ defaults = {
                 comboOpen: "jq-combo-open",
                 comboHover: "jq-combo-hover-over",
                 styleSetName: "default-style",
-                listItem: "jq-combo-list-item",
+                listItem: "", // jq-combo-list-item
+                list: "jq-combo-list-",
                 requestSending: "jq-combo-requesting-to-server",
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
@@ -99,6 +100,7 @@ defaults = {
                 spinner: "validation-spinner-",
                 error: "validation-error-",
                 input: "jq-input-",
+                list: "jq-combo-list-",
                 wrapper1: "first-wrapper-",
                 wrapper2: "second-wrapper-",
                 wrapper3: "third-wrapper-",
