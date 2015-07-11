@@ -130,7 +130,9 @@
                 invalid: "validation-icon-invalid fa fa-times",
                 valid: "validation-icon-valid fa fa-check",
                 spinner: "validation-icon-spinner fa fa-refresh fa-spin-custom",
-                error: "validation-icon-error fa fa-exclamation-circle"
+                error: "validation-icon-error fa fa-exclamation-circle",
+                wrapper: "icon-wrapper",
+                caret: "jq-caret-wrapper-",
             },
             cssClass: {
                 input: "jq-combo-input form-control",
@@ -151,12 +153,14 @@
             },
 
             iconsIdPrefixes: {
-                invalid: "invalid-mark-",
-                valid: "valid-mark-",
-                spinner: "validation-spinner-",
-                error: "validation-error-",
+                invalidIcon: "jq-combo-icon-mark-",
+                validIcon: "jq-combo-icon-mark-",
+                spinnerIcon: "jq-combo-icon-spinner-",
+                errorIcon: "jq-combo-icon-error-",
+                caretIcon: "jq-combo-icon-caret-",
                 input: "jq-input-",
                 list: "jq-combo-list-",
+                
                 wrapper1: "first-wrapper-",
                 wrapper2: "second-wrapper-",
                 wrapper3: "third-wrapper-",
@@ -749,9 +753,12 @@
             plugin: null,
             $inputWrapper: null,
             $input: null,
-            $caretWrapper: null,
             $list: null,
-            inputWrapper: function (plugin, $div, $implement, idPrefixes, id, cssClass) {
+            icons: {
+                $caretWrapper: null,
+                $spinnerWrapper: "",
+            },
+            inputWrapper: function (plugin, $implement, idPrefixes, id) {
                 /// <summary>
                 /// Render and get wrappers for input, along with caret wrapper and so on.
                 /// this.$caretWrapper, this.$inputWrapper populated.
@@ -1082,7 +1089,7 @@
                 this.ajaxRequest = jQuery.ajax({
                     method: method, // by default "GET"
                     url: url,
-                    data: sendingFields, // PlainObject or String or Array
+                    //data: sendingFields, // PlainObject or String or Array
                     crossDomain: isCrossDomain,
                     dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
                 });
@@ -1237,8 +1244,7 @@
                 /// <param name="response"></param>
                 /// <returns type=""></returns>
 
-                var plugin = this.plugin,
-                    settings = plugin.getSettings(),
+                var settings = plugin.getSettings(),
                     category = plugin.processingCategory;
 
                 var isRegularUrl = category.isRegular(),
@@ -1247,12 +1253,18 @@
                     isOdataPaged = category.isOdataPaged();
 
                 render.list(plugin, $div, $implement);
-                render.listItems(plugin, response); // clears before populate
+                if (isOdataOnly || isOdataPaged) {
+                    settings.totalItemsCountOnServer = response["odata.count"];
+                    var data = response["value"];
+                    render.listItems(plugin, data); // clears before populate
+                } else {
+                    render.listItems(plugin, response); // clears before populate
+                }
 
             },
             errorProcess: function (plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url) {
                 var code = jqXHR.status,
-                    settings = this.getSettings(),
+                    settings = plugin.getSettings(),
                     events = settings.events,
                     msg = "";
 
@@ -1262,14 +1274,8 @@
                 }
                 msg = "Code " + code + " : " + textStatus;
 
-                //console.log(jqXHR);
-                //console.log(textStatus);
-                //icons show/hide
-                this.showErrorIcon($input, msg);
-                if (settings.focusPersistIfNotValid) {
-                    this.focusIfnotValid($input, true);
-                }
-                if (!this.isEmpty(events.onError)) {
+
+                if (!plugin.isEmpty(events.onError)) {
                     events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
                 }
             }

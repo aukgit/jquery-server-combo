@@ -27,8 +27,8 @@ namespace SampleApp.Controllers
                 PagesExists = null,
                 ItemsInPage = 30
             };
-            var paged = products.GetPageData(pageInfo, "Products.Get.Count");
-            var newPaged = paged.ToList().Select(n => new {
+            //var paged = products.GetPageData(pageInfo, "Products.Get.Count");
+            var newPaged = products.ToList().Select(n => new {
                 n.ProductID,
                 n.ProductName,
                 Dated = n.Dated.ToString("dd-MMM-yyyy")

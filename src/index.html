@@ -106,6 +106,7 @@
                                 Country
                                 <span class="red">*</span>
                             </label>
+                            <!--//localhost:43236/Products/Get-->
                             <div class="col-md-10 jq-server-combo-container">
                                 <div class="jq-server-combo-implement"
                                      data-cross-domain="true"
@@ -113,11 +114,11 @@
                                      data-placeholder-value="-1"
                                      data-placeholder-disable="false"
                                      data-dynamic-load="true"
-                                     data-url="//localhost:43236/Products/Get"
+                                     data-url="//localhost:43236/odata/Products1" 
                                      data-next-page-url="//localhost:43236/Products/Get/@pageNumber"
                                      data-original-self-ui="false"
                                      data-max-search-item-display="5"
-                                     data-odata="false"
+                                     data-odata="true"
                                      data-is-keypress-delay="250"
                                      data-additional-css="btn-success"
                                      data-live-search="true"
@@ -129,12 +130,12 @@
                                      data-is-required="true"
                                      data-is-select-first-item="true"
                                      data-id="ProductID"
-                                     data-submit-method="post"
+                                     data-submit-method="get"
                                      data-display-field="ProductName"
                                      data-searching-field="ProductName"
                                      data-value-field="ProductID"
                                      data-name="ProductID"
-                                     data-pagination="true"
+                                     data-pagination="false"
                                      data-total-items-count="3000"
                                      data-current-page="5"
                                      data-page-size="30"

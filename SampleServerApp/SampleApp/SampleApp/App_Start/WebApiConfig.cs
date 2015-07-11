@@ -20,7 +20,7 @@ namespace SampleApp
 
 
             ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
-            builder.EntitySet<Product>("ProductsOData");
+            builder.EntitySet<Product>("Products1");
             builder.EntitySet<Employee>("Employees");
             builder.EntitySet<Category>("Categories"); 
             builder.EntitySet<COG>("COGs");
