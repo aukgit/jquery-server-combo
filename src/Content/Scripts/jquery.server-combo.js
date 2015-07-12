@@ -127,12 +127,14 @@
                 propertyFieldName: "data-name"
             },
             icons: {
-                invalid: "validation-icon-invalid fa fa-times",
-                valid: "validation-icon-valid fa fa-check",
-                spinner: "validation-icon-spinner fa fa-refresh fa-spin-custom",
-                error: "validation-icon-error fa fa-exclamation-circle",
-                wrapper: "icon-wrapper",
-                caret: "jq-caret-wrapper-",
+                invalid: "jq-combo-icon-invalid fa fa-times",
+                valid: "jq-combo-icon-valid fa fa-check",
+                spinner: "jq-combo-icon-spinner fa fa-refresh fa-spin-custom",
+                error: "jq-combo-icon-error fa fa-exclamation-circle",
+                search: "jq-combo-icon-search fa fa-search",
+                caret: "jq-combo-icon-caret fa fa-caret-down",
+                iconList: "jq-combo-icons-list",
+                iconWrapper: "jq-combo-icons-wrapper"
             },
             cssClass: {
                 input: "jq-combo-input form-control",
@@ -160,7 +162,8 @@
                 caretIcon: "jq-combo-icon-caret-",
                 input: "jq-input-",
                 list: "jq-combo-list-",
-                
+                iconList: "jq-combo-icons-list-",
+                iconWrapper: "jq-combo-icons-wrapper-",
                 wrapper1: "first-wrapper-",
                 wrapper2: "second-wrapper-",
                 wrapper3: "third-wrapper-",
@@ -755,8 +758,93 @@
             $input: null,
             $list: null,
             icons: {
+                plugin: null,
                 $caretWrapper: null,
-                $spinnerWrapper: "",
+                $searchWrapper: null,
+                $spinnerWrapper: null,
+                $errorWrapper: null,
+                $validWrapper: null,
+                $invalidWrapper: null,
+                $iconsListWrapper: null,
+                createAllIcons: function (plugin, $inputWrapper) {
+
+                },
+                createIcon: function (plugin, $inputWrapper, iconId) {
+                    var $list = this.createListWrapper(plugin, $inputWrapper),
+                        settings = plugin.getSettings(),
+                        ids = settings.idPrefixes,
+                        id = plugin.getID(),
+                        listWrapperId = iconId,
+                        finalId = listWrapperId + id,
+                        iconWrapperId = ids.iconWrapper + "-" + id,
+                        icons = settings.icons,
+                        css = null,
+                        $elem,
+                        elementName = "none";
+                    if (iconId === ids.caretIcon) {
+                        // caret icon
+                        elementName = "$caretWrapper";
+                        css = icons.caret;
+                    } else if (iconId === ids.searchIcon) {
+                        // caret icon
+                        elementName = "$searchWrapper";
+                        css = icons.search;
+                    } else if (iconId === ids.errorIcon) {
+                        // caret icon
+                        elementName = "$errorWrapper";
+                        css = icons.error;
+                    } else if (iconId === ids.spinnerIcon) {
+                        // caret icon
+                        elementName = "$spinnerWrapper";
+                        css = icons.spinner;
+                    } else if (iconId === ids.validIcon) {
+                        // caret icon
+                        elementName = "$validWrapper";
+                        css = icons.valid;
+                    } else if (iconId === ids.invalidIcon) {
+                        // caret icon
+                        elementName = "$invalidWrapper";
+                        css = icons.invalid;
+                    }
+
+                    $elem = this[elementName];
+                    if (!$elem) {
+                        // create
+                        var $iconWrapper = $("<li></li>", {
+                               id: iconWrapperId,
+                               'class': icons.iconWrapper
+                           }),
+                           $icon = $("<i></i>", {
+                               id: finalId,
+                               'class': css
+                           });
+                        $icon.appendTo($iconWrapper);
+                        $iconWrapper.prependTo($list);
+                        $elem = $iconWrapper;
+                        this[elementName] = $elem;
+                    }
+                    return $elem;
+                },
+                createListWrapper: function (plugin, $inputWrapper) {
+                    var elementName = "$iconsListWrapper",
+                        $elem = this[elementName];
+                    if (!$elem) {
+                        var settings = plugin.getSettings(),
+                            ids = settings.idPrefixes,
+                            id = plugin.getID(),
+                            listWrapperId = ids.iconList,
+                            finalId = listWrapperId + id,
+                            css = settings.icons.iconList,
+                            $wrapper = $("<ul></ul>", {
+                                id: finalId,
+                                'class': css
+                            });
+                        $wrapper.appendTo($inputWrapper);
+                        this[elementName] = $wrapper;
+                        $elem = $wrapper;
+                    }
+                    return $elem;
+                }
             },
             inputWrapper: function (plugin, $implement, idPrefixes, id) {
                 /// <summary>

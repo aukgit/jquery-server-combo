@@ -71,10 +71,14 @@ defaults = {
                 propertyFieldName: "data-name"
             },
             icons: {
-                invalid: "validation-icon-invalid fa fa-times",
-                valid: "validation-icon-valid fa fa-check",
-                spinner: "validation-icon-spinner fa fa-refresh fa-spin-custom",
-                error: "validation-icon-error fa fa-exclamation-circle"
+                invalid: "jq-combo-icon-invalid fa fa-times",
+                valid: "jq-combo-icon-valid fa fa-check",
+                spinner: "jq-combo-icon-spinner fa fa-refresh fa-spin-custom",
+                error: "jq-combo-icon-error fa fa-exclamation-circle",
+                search: "jq-combo-icon-search fa fa-search",
+                caret: "jq-combo-icon-caret fa fa-caret-down",
+                iconList: "jq-combo-icons-list",
+                iconWrapper: "jq-combo-icons-wrapper"
             },
             cssClass: {
                 input: "jq-combo-input form-control",
@@ -86,7 +90,7 @@ defaults = {
                 comboHover: "jq-combo-hover-over",
                 styleSetName: "default-style",
                 listItem: "", // jq-combo-list-item
-                list: "jq-combo-list-",
+                list: "jq-combo-list",
                 requestSending: "jq-combo-requesting-to-server",
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
@@ -95,12 +99,16 @@ defaults = {
             },
 
             iconsIdPrefixes: {
-                invalid: "invalid-mark-",
-                valid: "valid-mark-",
-                spinner: "validation-spinner-",
-                error: "validation-error-",
+                invalidIcon: "jq-combo-icon-mark-",
+                validIcon: "jq-combo-icon-mark-",
+                spinnerIcon: "jq-combo-icon-spinner-",
+                errorIcon: "jq-combo-icon-error-",
+                caretIcon: "jq-combo-icon-caret-",
+                searchIcon: "jq-combo-icon-search-",
                 input: "jq-input-",
                 list: "jq-combo-list-",
+                iconList: "jq-combo-icons-list-",
+                iconWrapper: "jq-combo-icons-wrapper-",
                 wrapper1: "first-wrapper-",
                 wrapper2: "second-wrapper-",
                 wrapper3: "third-wrapper-",
@@ -116,6 +124,7 @@ defaults = {
             events: {
                 iconCreated: function ($div, $input, $iconContainer) { },
                 inputCreated: function (plugin, $div, $implementDiv, $input) { },
+                listCreated: function (plugin, $div, $implementDiv, $input, data) { },
                 sameRequestTwice: function ($div, $input, url, previousText) { },
                 beforeSendingRequest: function ($div, $input, url) { },
                 responseReceived: function ($div, $input, response) { },
