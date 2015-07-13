@@ -12,7 +12,7 @@
  * Md. Alim Ul Karim, 
  * Software Engineer at Enosis Solutions,
  * CSE, North South University 
- * Bangladesh, Dhaka.
+ * Bangladesh, Dhaka. 
  * me{at}alimkarim.com
  *
  * by Md. Alim Ul karim 
