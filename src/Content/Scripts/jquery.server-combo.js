@@ -160,7 +160,8 @@
                 spinnerIcon: "jq-combo-icon-spinner-",
                 errorIcon: "jq-combo-icon-error-",
                 caretIcon: "jq-combo-icon-caret-",
-                input: "jq-input-",
+                searchIcon: "jq-combo-icon-search-",
+                input: "jq-combo-input-",
                 list: "jq-combo-list-",
                 iconList: "jq-combo-icons-list-",
                 iconWrapper: "jq-combo-icons-wrapper-",
@@ -388,6 +389,7 @@
 
                 var $inputWrapper = render.$inputWrapper,
                     $input = render.$input;
+                render.icons.createAllIcons(this, $inputWrapper);
 
                 // trigger events
                 this.setTriggerableEvents($divElement, $implementDiv, $inputWrapper, $input);
@@ -695,7 +697,7 @@
             var triggerableEvents = this.triggerableEvents,
                 self = this,
                 render = this.render,
-                $caretWrapper = render.$caretWrapper;
+                $caretWrapper = render.icons.$caretWrapper;
 
             $implement.hover(
                 function (e) {
@@ -767,20 +769,34 @@
                 $invalidWrapper: null,
                 $iconsListWrapper: null,
                 createAllIcons: function (plugin, $inputWrapper) {
-
+                    var ids = plugin.getIdPrefixes(),
+                        iconIds = [
+                            ids.caretIcon,
+                            ids.searchIcon,
+                            ids.spinnerIcon,
+                            ids.validIcon,
+                            ids.invalidIcon,
+                            ids.errorIcon
+                        ];
+                    for (var i = 0; i < iconIds.length; i++) {
+                        var iconId = iconIds[i];
+                        this.createIcon(plugin, $inputWrapper, iconId);
+                    }
                 },
                 createIcon: function (plugin, $inputWrapper, iconId) {
-                    var $list = this.createListWrapper(plugin, $inputWrapper),
-                        settings = plugin.getSettings(),
-                        ids = settings.idPrefixes,
-                        id = plugin.getID(),
-                        listWrapperId = iconId,
-                        finalId = listWrapperId + id,
-                        iconWrapperId = ids.iconWrapper + "-" + id,
+                    /// <summary>
+                    /// Create and get icon by this method
+                    /// </summary>
+                    /// <param name="plugin"></param>
+                    /// <param name="$inputWrapper"></param>
+                    /// <param name="iconId"></param>
+                    /// <returns type=""></returns>
+                    var ids = plugin.getIdPrefixes(),
                         icons = settings.icons,
-                        css = null,
-                        $elem,
-                        elementName = "none";
+                        css = "",
+                        elementName = "",
+                        $elem = null;
+
                     if (iconId === ids.caretIcon) {
                         // caret icon
                         elementName = "$caretWrapper";
@@ -809,14 +825,25 @@
 
                     $elem = this[elementName];
                     if (!$elem) {
+                        var $list = this.createListWrapper(plugin, $inputWrapper),
+                            id = plugin.getID(), // input id
+                            wrapperId = ids.iconWrapper, // jq-combo-icons-wrapper-
+                            finalIconId = iconId + id, // jq-combo-icon-caret-inputId
+                            onlyIconId = iconId.replace("jq-combo-icon-", ""), // caret-
+                            iconWrapperId = wrapperId + onlyIconId + id,
+                            onlyIconName = onlyIconId.replace("-", "");
                         // create
                         var $iconWrapper = $("<li></li>", {
-                               id: iconWrapperId,
-                               'class': icons.iconWrapper
-                           }),
+                            id: iconWrapperId,
+                            'class': icons.iconWrapper,
+                            'data-prop': id,
+                            'data-icon-wrapper': onlyIconName
+                        }),
                            $icon = $("<i></i>", {
-                               id: finalId,
-                               'class': css
+                               id: finalIconId,
+                               'class': css,
+                               'data-prop': id,
+                               'data-icon': onlyIconName
                            });
                         $icon.appendTo($iconWrapper);
                         $iconWrapper.prependTo($list);
@@ -830,7 +857,7 @@
                         $elem = this[elementName];
                     if (!$elem) {
                         var settings = plugin.getSettings(),
-                            ids = settings.idPrefixes,
+                            ids = plugin.getIdPrefixes(),
                             id = plugin.getID(),
                             listWrapperId = ids.iconList,
                             finalId = listWrapperId + id,
@@ -846,7 +873,7 @@
                     return $elem;
                 }
             },
-            inputWrapper: function (plugin, $implement, idPrefixes, id) {
+            inputWrapper: function (plugin, $implement) {
                 /// <summary>
                 /// Render and get wrappers for input, along with caret wrapper and so on.
                 /// this.$caretWrapper, this.$inputWrapper populated.
@@ -858,22 +885,10 @@
                 /// <param name="id">Send the id of the input</param>
                 /// <returns type=""></returns>
                 var elementName = "$inputWrapper",
-                    typeObject = "input";
-
-                if (plugin.isEmpty(this[elementName])) {
-                    var dropDownIconId = "dropdown-icon-" + id,
-                        dropDownIconWrapperId = "dropdown-wrapper-icon-" + id,
-                        $iconWrapper = $("<span></span>", {
-                            id: dropDownIconWrapperId,
-                            'class': "dropdown-wrapper-icon"
-                        }),
-                        $icon = $("<i></i>", {
-                            id: dropDownIconId,
-                            'class': "dropdown-icon fa fa-caret-down"
-                        });
-                    $icon.appendTo($iconWrapper);
-                    var $wrapper = this.createWrapper($implement, typeObject, $iconWrapper, 2);
-                    this.$caretWrapper = $.byId(dropDownIconWrapperId);
+                    wraperType = "input";
+                if (!this[elementName]) {
+                    this.createWrapper($implement, wraperType); //level 2
+                    var $wrapper = this.getWrapper(wraperType, 2);
                     this[elementName] = $wrapper;
                 }
                 return this[elementName];
@@ -893,11 +908,14 @@
                     id = plugin.getID(),
                     finalId = ids.input + id,
                     events = plugin.getEvents(),
-                    wraperType = "input";
+                    css = cssClass.input + " " + settings.additionalCSS,
+                    $elem = null;
 
                 var elementName = "$input";
 
-                if (plugin.isEmpty(this[elementName])) {
+                $elem = this[elementName];
+
+                if (!$elem) {
                     // if empty then create
                     var placeHolder = "", placeHolderValue = "", isPlaceHolder = false;
                     if (settings.placeHolderDisable === false) {
@@ -907,7 +925,7 @@
                     }
                     var $inputHtml = $("<input/>", {
                         id: finalId,
-                        'class': cssClass.input,
+                        'class': css,
                         type: "text",
                         placeholder: placeHolder,
                         'data-placeholder-val': placeHolderValue,
@@ -916,18 +934,16 @@
                     // create input wrapper and caret wrapper and caret
                     // using the createWrapper function
                     // by default it returns the top wrapper with level 2.
-                    this.inputWrapper(plugin, $div, $implement, ids, id, cssClass);
-                    var $inputWrapper = this.getWrapper(wraperType, 2);
+                    var $inputWrapper = this.inputWrapper(plugin,$implement);
                     $inputHtml.prependTo($inputWrapper);
-
-                    this[elementName] = $.byId(finalId);
+                    $elem = $inputWrapper;
                     if (plugin.isDebugging) {
-                        console.log(this[elementName]);
+                        console.log($elem);
                     }
-                    events.inputCreated(plugin, $div, $implement, this[elementName]);
+                    this[elementName] = $elem;
+                    events.inputCreated(plugin, $div, $implement, $elem);
                     //plugin[elementName] = this[elementName];
                 }
-
                 return this[elementName];
             },
             clearList: function () {
@@ -988,9 +1004,9 @@
                 }
 
                 var $divWrapper1 = $("<div></div>", {
-                    id: wrapper1,
-                    'class': cssClass.wrapper1
-                }),
+                        id: wrapper1,
+                        'class': cssClass.wrapper1
+                    }),
                     $divWrapper2 = $("<div></div>", {
                         id: wrapper2,
                         'class': cssClass.wrapper2
@@ -1005,22 +1021,30 @@
                     });
 
                 if (level === 4) {
-                    $wrappingObject.appendTo($divWrapper4);
+                    if ($wrappingObject) {
+                        $wrappingObject.appendTo($divWrapper4);
+                    }
                     $divWrapper4.appendTo($divWrapper3);
                     $divWrapper3.appendTo($divWrapper2);
                     $divWrapper2.appendTo($divWrapper1);
                     $divWrapper1.appendTo($implement);
                 } else if (level === 3) {
-                    $wrappingObject.appendTo($divWrapper3);
+                    if ($wrappingObject) {
+                        $wrappingObject.appendTo($divWrapper3);
+                    }
                     $divWrapper3.appendTo($divWrapper2);
                     $divWrapper2.appendTo($divWrapper1);
                     $divWrapper1.appendTo($implement);
                 } else if (level === 2) {
-                    $wrappingObject.appendTo($divWrapper2);
+                    if ($wrappingObject) {
+                        $wrappingObject.appendTo($divWrapper2);
+                    }
                     $divWrapper2.appendTo($divWrapper1);
                     $divWrapper1.appendTo($implement);
                 } else if (level === 1) {
-                    $wrappingObject.appendTo($divWrapper1);
+                    if ($wrappingObject) {
+                        $wrappingObject.appendTo($divWrapper1);
+                    }
                     $divWrapper1.appendTo($implement);
                 }
                 return $divWrapper1;
