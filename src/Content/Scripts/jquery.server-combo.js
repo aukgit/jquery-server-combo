@@ -873,8 +873,7 @@
                         $iconWrapper.prependTo($list);
                         if (message) {
                             // if message exist
-                            var listId = this.getListId(),
-                                bodyTooltipContainerId = this.createTooltipContainerAndGetId();
+                            var bodyTooltipContainerId = this.createTooltipContainerAndGetId(plugin);
                             $icon.tooltip({
                                 animated: 'fade',
                                 placement: 'top',
@@ -888,7 +887,7 @@
                     }
                     return $elem;
                 },
-                createTooltipContainerAndGetId: function () {
+                createTooltipContainerAndGetId: function (plugin) {
                     /// <summary>
                     ///  create the tooltip container at body level for once
                     ///  and then send the id.
@@ -898,7 +897,8 @@
                         $elem = $.byId(id);
                     if ($elem.length === 0) {
                         var $div = $("<div></div>", {
-                            'id': id
+                            'id': id,
+                            'class': plugin.getCssClasses().styleSetName + " jq-server-combo"
                         });
                         $div.appendTo($('body'));
                     }

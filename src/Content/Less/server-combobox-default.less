@@ -2,7 +2,7 @@
 
 
 @icon-caret-color: #a5a5a5;
-@icon-caret-hover-color: #a5a5a5;
+@icon-caret-hover-color: #0094ff;
 
 @icon-search-color: #0094ff;
 @icon-search-hover-color: #3998dd;
@@ -10,20 +10,20 @@
 @icon-search-tooltip-bg-color: #0094ff;
 
 
-@icon-spinner-color:#0094ff;
-@icon-spinner-hover-color: #348ccb ;
+@icon-spinner-color: #0094ff;
+@icon-spinner-hover-color: #348ccb;
 @icon-spinner-tooltip-color: white;
 @icon-spinner-tooltip-bg-color: #0094ff;
 
 @icon-error-color: #E22013;
-@icon-error-hover-color:#d72a1e;
+@icon-error-hover-color: #d72a1e;
 @icon-error-tooltip-color: white;
 @icon-error-tooltip-bg-color: #E22013;
 
 @icon-valid-color: #1CAB1C;
 @icon-valid-hover-color: #1CAB1C;
 @icon-valid-tooltip-color: white;
-@icon-valid-tooltip-bg-color:#1CAB1C;
+@icon-valid-tooltip-bg-color: #1CAB1C;
 
 @icon-invalid-color: #E22013;
 @icon-invalid-hover-color: #d72a1e;
@@ -33,18 +33,101 @@
 
 .jq-server-combo {
     &.default-style {
-        [data-icon]{
-            color:inherit;
-        }
         .jq-combo-icon-search {
-            color: @icon-search-color;
+            @color: @icon-search-color;
+            @hover: @icon-search-hover-color;
+            @tooltip-color: @icon-search-tooltip-color;
+            @tooltip-bg: @icon-search-tooltip-bg-color;
+
+            color: @color;
 
             &:hover {
-                color: @dropdown-caret-hover-color;
+                color: @hover;
+            }
+
+            .tooltip-inner {
+                background-color: @tooltip-bg;
+                color: @tooltip-color;
             }
         }
-        .jq-combo-tooltip-container{
+        .jq-combo-icon-spinner {
+            @color: @icon-spinner-color;
+            @hover: @icon-spinner-hover-color;
+            @tooltip-color: @icon-spinner-tooltip-color;
+            @tooltip-bg: @icon-spinner-tooltip-bg-color;
 
+            color: @color;
+
+            &:hover {
+                color: @hover;
+            }
+
+            .tooltip-inner {
+                background-color: @tooltip-bg;
+                color: @tooltip-color;
+            }
+        }
+
+        .jq-combo-icon-caret {
+            @color: @icon-caret-color;
+            @hover: @icon-caret-hover-color;
+
+            color: @color;
+
+            &:hover {
+                color: @hover;
+            }
+        }
+        .jq-combo-icon-valid {
+            @color: @icon-valid-color;
+            @hover: @icon-valid-hover-color;
+            @tooltip-color: @icon-valid-tooltip-color;
+            @tooltip-bg: @icon-valid-tooltip-bg-color;
+
+            color: @color;
+
+            &:hover {
+                color: @hover;
+            }
+
+            .tooltip-inner {
+                background-color: @tooltip-bg;
+                color: @tooltip-color;
+            }
+        }
+        .jq-combo-icon-invalid {
+            @color: @icon-invalid-color;
+            @hover: @icon-invalid-hover-color;
+            @tooltip-color: @icon-invalid-tooltip-color;
+            @tooltip-bg: @icon-invalid-tooltip-bg-color;
+
+            color: @color;
+
+            &:hover {
+                color: @hover;
+            }
+
+            .tooltip-inner {
+                background-color: @tooltip-bg;
+                color: @tooltip-color;
+            }
+        }
+        .jq-combo-icon-error {
+            @color: @icon-error-color;
+            @hover: @icon-error-hover-color;
+            @tooltip-color: @icon-error-tooltip-color;
+            @tooltip-bg: @icon-error-tooltip-bg-color;
+
+            color: @color;
+
+            &:hover {
+                color: @hover;
+            }
+
+            .tooltip-inner {
+                background-color: @tooltip-bg;
+                color: @tooltip-color;
+            }
         }
         &.jq-combo-hover-over {
             .jq-combo-input {
