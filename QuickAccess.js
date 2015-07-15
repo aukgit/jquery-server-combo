@@ -95,11 +95,13 @@ defaults = {
                 styleSetName: "default-style",
                 listItem: "", // jq-combo-list-item
                 list: "jq-combo-list",
+                listDisplayWrapper: "jq-combo-list-wrapper",
                 requestSending: "jq-combo-requesting-to-server",
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
                 wrapper3: "third-wrapper-container",
-                wrapper4: "forth-wrapper-container"
+                wrapper4: "forth-wrapper-container",
+                hiddenClass: "jq-combo-hidden-element"
             },
 
             iconsIdPrefixes: {

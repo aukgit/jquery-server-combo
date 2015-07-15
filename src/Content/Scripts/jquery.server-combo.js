@@ -24,11 +24,11 @@
 ; (function ($, window, document, undefined) {
 
     "use strict";
-    if (typeof jQuery === 'undefined') {
-        throw new Error('serverComboBox requires jQuery');
+    if (typeof jQuery === "undefined") {
+        throw new Error("serverComboBox requires jQuery");
     }
     if (typeof jQuery.validator === "undefined") {
-        throw new Error('serverComboBox requires jQuery validation plugin & jquery.validate.unobtrusive plugin.');
+        throw new Error("serverComboBox requires jQuery validation plugin & jquery.validate.unobtrusive plugin.");
     }
     var pluginName = "serverComboBox",
         $selfContainer,
@@ -151,6 +151,7 @@
                 styleSetName: "default-style",
                 listItem: "", // jq-combo-list-item
                 list: "jq-combo-list",
+                listDisplayWrapper: "jq-combo-list-wrapper",
                 requestSending: "jq-combo-requesting-to-server",
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
@@ -374,6 +375,13 @@
                 // sets the processing category
                 this.processingCategory.init();
 
+
+                // render elements and retrieve elements in plugin object
+                render.input(this, $divElement, $implementDiv);
+                render.icons.createAllIcons(this);
+
+
+                // send request to the server
                 this.processDiv($divElement, $implementDiv);
 
                 // add classes
@@ -387,14 +395,11 @@
 
 
 
-                // render elements and retrieve elements in plugin object
-                render.input(this, $divElement, $implementDiv);
 
 
 
                 var $input = render.$input,
                     $inputWrapper = render.$inputWrapper;
-                render.icons.createAllIcons(this);
 
                 // trigger events
                 this.setTriggerableEvents($divElement, $implementDiv, $inputWrapper, $input);
@@ -750,9 +755,6 @@
             caretClick: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
                 var css = plugin.getCssClasses();
                 plugin.classAddRemove($caretWrapper, null, css.comboHover);
-                var ids = plugin.getIdPrefixes();
-                plugin.render.icons.showOnlyIcons([ids.invalidIcon, ids.validIcon]);
-
             },
             caretHoverIn: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
                 var css = plugin.getCssClasses();
@@ -761,6 +763,26 @@
             caretHoverOut: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
                 var css = plugin.getCssClasses();
                 plugin.classAddRemove($caretWrapper, null, css.comboHover);
+            },
+            dataPopulated: function (plugin, data, $div, $implement, $inputWrapper, $listWrapper) {
+                /// <summary>
+                /// this method will be triggered whenever data is populated or retrieved through an ajax request.
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <param name="data"></param>
+                /// <param name="$div"></param>
+                /// <param name="$implement"></param>
+                /// <param name="$inputWrapper"></param>
+                /// <param name="$listWrapper"></param>
+                /// <returns type=""></returns>
+
+            },
+            listItemClicked: function (plugin, $list, $listOfItems, $item, evnt) {
+
+                var selectionClass = "jq-combo-selected",
+                    $selectedItems = $listOfItems.filter("." + selectionClass);
+                plugin.classAddRemove($selectedItems, null, selectionClass);
+                plugin.classAddRemove($item, selectionClass);
             }
         },
 
@@ -784,29 +806,44 @@
                     /// <summary>
                     /// Only given array of iconIds will be visible others will be hidden
                     /// </summary>
-                    /// <param name="iconIds">array type</param>
+                    /// <param name="iconIds">array type or single string, if single id given as string then only that one will be displayed.</param>
                     /// <returns type=""></returns>
                     if (iconIds) {
                         var hiddenListIds = [],
                             allIconIds = this.allIconsIdList,
                             i, id, plugin = this.plugin;
-                        for (i = 0; i < allIconIds.length; i++) {
-                            id = allIconIds[i];
-                            if (iconIds.indexOf(id) === -1) {
-                                // don't display that icon
-                                hiddenListIds.push(id);
+                        if (Array.isArray(iconIds)) {
+                            // multiple ids
+                            for (i = 0; i < allIconIds.length; i++) {
+                                id = allIconIds[i];
+                                if (iconIds.indexOf(id) === -1) {
+                                    // don't display that icon
+                                    hiddenListIds.push(id);
+                                }
+                            }
+                            // show
+                            for (i = 0; i < iconIds.length; i++) {
+                                id = iconIds[i];
+                                this.showIcon(plugin, id);
+                            }
+                            // hide
+                            for (i = 0; i < hiddenListIds.length; i++) {
+                                id = hiddenListIds[i];
+                                this.hideIcon(plugin, id);
+                            }
+                        } else if (typeof iconIds === "string") {
+                            // single id
+                            for (i = 0; i < allIconIds.length; i++) {
+                                id = allIconIds[i];
+                                if (iconIds === id) {
+                                    // don't display that icon
+                                    this.showIcon(plugin, id);
+                                } else {
+                                    this.hideIcon(plugin, id);
+                                }
                             }
                         }
-                        // show
-                        for (i = 0; i < iconIds.length; i++) {
-                            id = iconIds[i];
-                            this.showIcon(plugin, id);
-                        }
-                        // hide
-                        for (i = 0; i < hiddenListIds.length; i++) {
-                            id = hiddenListIds[i];
-                            this.hideIcon(plugin, id);
-                        }
+
                     }
                 },
                 showIcon: function (plugin, iconId) {
@@ -814,12 +851,14 @@
                         css = plugin.getCssClasses(),
                         hiddenClass = css.hiddenClass;
                     plugin.classAddRemove($icon, null, hiddenClass);
+                    plugin.animateOn($icon);
                 },
                 hideIcon: function (plugin, iconId) {
                     var $icon = this.getOrCreateIcon(plugin, iconId),
                         css = plugin.getCssClasses(),
                         hiddenClass = css.hiddenClass;
                     plugin.classAddRemove($icon, hiddenClass);
+                    plugin.animateOff($icon);
                 },
                 createAllIcons: function (plugin) {
                     var ids = plugin.getIdPrefixes(),
@@ -923,10 +962,10 @@
                             // if message exist
                             var bodyTooltipContainerId = this.createTooltipContainerAndGetId(plugin);
                             $icon.tooltip({
-                                animated: 'fade',
-                                placement: 'top',
-                                container: '#' + bodyTooltipContainerId
-                            }).data('bs.tooltip')
+                                animated: "fade",
+                                placement: "top",
+                                container: "#" + bodyTooltipContainerId
+                            }).data("bs.tooltip")
                               .tip()
                               .addClass(appropriateClass);
                         }
@@ -948,7 +987,7 @@
                             'id': id,
                             'class': plugin.getCssClasses().styleSetName + " jq-server-combo"
                         });
-                        $div.appendTo($('body'));
+                        $div.appendTo($("body"));
                     }
                     return id;
                 },
@@ -1180,6 +1219,7 @@
                     id = plugin.getID(),
                     finalId = ids.list + id,
                     events = plugin.getEvents(),
+                    wrapperClass = cssClass.listDisplayWrapper,
                     typeObject = "list";
 
                 var elementName = "$list",
@@ -1192,7 +1232,7 @@
                         'class': cssClass.list + " " // hide
                     });
                     // creates the wrapper and injects into the $implement.
-                    this.GetAndCreateWrapper($implement, typeObject, $listHtml);
+                    this.GetAndCreateWrapper($implement, typeObject, $listHtml, 2, wrapperClass);
 
                     this[elementName] = $.byId(finalId);
                     $elem = this[elementName];
@@ -1214,6 +1254,7 @@
                 /// <summary>
                 /// Renders the list items under $list(underscored list)
                 /// clears the list if no data exist.
+                /// Binds list items with triggerableEvents
                 /// </summary>
                 /// <param name="$list">$list(underscored list)</param>
                 /// <param name="data">json data</param>
@@ -1225,7 +1266,9 @@
                 var cssClass = plugin.getCssClasses(),
                     settings = plugin.getSettings(),
                     events = plugin.getEvents(),
+                    triEvents = plugin.triggerableEvents,
                     len = data.length,
+                    inputId = plugin.getID(),
                     idField = settings.valueField,
                     displayField = settings.displayField,
                     arrayList = new Array(len + 5),
@@ -1236,17 +1279,24 @@
                 for (var i = 0; i < len; i++) {
                     var row = data[i],
                         id = row[idField],
-                        display = row[displayField];
-                    if (isClassExist) {
-                        arrayList[i] = "<li class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
+                        display = row[displayField],
+                        arrayIndex = i + 1,
+                        htmlId = "id='" + inputId + "-" + id + "'";
+                    if (isClassExist === true) {
+                        arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
                     } else {
                         // no class
-                        arrayList[i] = "<li data-id='" + id + "'>" + display + "</li>";
+                        arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
                     }
                 }
-
+                // todo : retrieve pagination list items 0 and len + 2
                 var ulContents = arrayList.join("");
                 $list.html(ulContents);
+
+                var $listItems = $list.find("li");
+                $listItems.on('click', function (evt) {
+                    triEvents.listItemClicked(plugin, $list, $listItems, $(this), evt);
+                });
             }
         },
         ajax: {
@@ -1288,9 +1338,6 @@
                 plugin.classAddRemove($div, null, classes.requestSending);
                 plugin.classAddRemove($implement, null, classes.requestSending);
             },
-            beforeSend: function ($implement, $input, url, sendingFields) {
-
-            },
             sendRequest: function (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields) {
                 /// <summary>
                 /// Sends the ajax request and binds with done and error methods to route to.
@@ -1308,11 +1355,16 @@
                     isDebugging = plugin.isDebugging,
                     events = settings.events,
                     isCrossDomain = settings.crossDomain,
-                    self = this;
+                    self = this,
+                    ids = plugin.getIdPrefixes();
 
 
                 // Abort previous ajax request and hide all the icons
                 this.abortPrevious();
+
+                // show spinner only
+                render.icons.showOnlyIcons(ids.spinnerIcon);
+
 
                 this.addClassWhileSending();
 
@@ -1328,21 +1380,24 @@
 
                 this.ajaxRequest.done(function (response) {
                     // stop processing marks
-                    self.removeClassAfterSendingRequest();
-                    plugin.markAsProcessing($div, false);
                     if (isDebugging) {
                         console.log(response);
                     }
+                    // show spinner only
+                    render.icons.showOnlyIcons([ids.caretIcon, ids.searchIcon]);
                     retrieveData.process(plugin, render, $div, $implement, $input, response);
                 });
 
                 this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
-                    self.removeClassAfterSendingRequest();
-                    plugin.markAsProcessing($div, false);
-
                     //self.hideSpinner($input);
                     retrieveData.errorProcess(plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url);
                     console.log("Request failed: " + exceptionMessage + ". Url : " + url);
+                    render.icons.showOnlyIcons(ids.errorIcon);
+                });
+
+                this.ajaxRequest.always(function () {
+                    self.removeClassAfterSendingRequest();
+                    plugin.markAsProcessing($div, false);
                 });
             }
         },
@@ -1388,8 +1443,8 @@
 
 
                 var newNextPageUrl = settings.url;
-                if (newNextPageUrl[newNextPageUrl.length - 1] !== '?') {
-                    newNextPageUrl += '?';
+                if (newNextPageUrl[newNextPageUrl.length - 1] !== "?") {
+                    newNextPageUrl += "?";
                 }
 
                 newNextPageUrl += queryString;
@@ -1459,12 +1514,28 @@
                     $div = plugin.getDiv(),
                     $implement = plugin.getImplement(),
                     $input = render.$input;
-                //(plugin, render, retrieveData, $div, $implement, $input, url, sendingFields)
+                // (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields)
+                // icons display will be placed inside that ajax send request.
                 ajax.sendRequest(plugin, render, this, $div, $implement, $input, url, null);
+            },
+            setDataInPlugin: function (plugin, data) {
+                /// <summary>
+                /// Sets plugin data and triggers plugin.triggerableEvents.dataPopulated(...) method.
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <param name="data"></param>
+                /// <returns type=""></returns>
+                plugin.data = data;
+                var $div = plugin.getDiv(),
+                    $implement = plugin.getImplement(),
+                    $inputWrapper = plugin.render.$inputWrapper,
+                    $listWrapper = plugin.render.$listWrapper;
+                plugin.triggerableEvents.dataPopulated(plugin, data, $div, $implement, $inputWrapper, $listWrapper);
             },
             process: function (plugin, render, $div, $implement, $input, response) {
                 /// <summary>
                 /// Calls from ajax.sendRequest() when the request is done.
+                /// Calls setDataInPlugin(plugin, response) to set the plugin data.
                 /// Sets data to received data.
                 /// Process the retrieved data.
                 /// </summary>
@@ -1485,14 +1556,16 @@
                     isOdataPaged = category.isOdataPaged();
 
                 render.list(plugin, $div, $implement);
+                var data = response;
                 if (isOdataOnly || isOdataPaged) {
                     settings.totalItemsCountOnServer = response["odata.count"];
-                    var data = response["value"];
+                    data = response["value"];
                     render.listItems(plugin, data); // clears before populate
                 } else {
-                    render.listItems(plugin, response); // clears before populate
+                    render.listItems(plugin, data); // clears before populate
                 }
-
+                // sets data to plugin.
+                this.setDataInPlugin(plugin, data);
             },
             errorProcess: function (plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url) {
                 var code = jqXHR.status,

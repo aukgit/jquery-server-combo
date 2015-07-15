@@ -1,5 +1,17 @@
 ﻿@import "override-mvc.variables.less";
 
+@jq-display-list-height: 200px;
+@jq-display-list-zIndex: 1000;
+@jq-input-zIndex: 1001;
+@jq-combo-icons-zIndex: 1002;
+@jq-display-list-item-min-height: 2.143em;
+@jq-display-list-item-line-height: @jq-display-list-item-min-height;
+@jq-display-list-bg-color: white;
+@jq-display-list-border-color: #f0f0f0;
+@jq-display-list-padding: 1px 11px;
+
+@combo-selected-bg-color: #39c2f4;
+@combo-selected-color: white;
 
 .jq-server-combo {
     .first-wrapper-container {
@@ -12,17 +24,22 @@
         .max-width(@inputs-max-width);
     }
 
+    .jq-combo-input {
+        position: relative;
+        z-index: @jq-input-zIndex;
+    }
+
     .implement, [data-toggle="tooltip"] {
         display: inline-block;
     }
-
     // icons styling started
     .jq-combo-icons-list {
         position: absolute;
-        .top(8px);
-        .right(7px);
+        .top(7px);
+        .right(8px);
         padding: 0;
         margin: 0;
+        z-index: @jq-combo-icons-zIndex;
 
         .jq-combo-icons-wrapper {
             list-style: none;
@@ -34,27 +51,40 @@
     .jq-combo-list {
         margin: 0;
         padding: 0;
-        border-color: #ebebeb;
+        border: 2px solid @jq-display-list-border-color;
+        .height(@jq-display-list-height);
+        overflow: auto;
+        width: @inputs-max-width;
+        z-index: @jq-display-list-zIndex;
+        background-color: @jq-display-list-bg-color;
+        position: absolute;
+        top: -1px;
 
         li {
             list-style: none;
             margin: 0;
             list-style-position: inside;
             lighting-color: red;
-            //.padding(5px);
-            padding: 1px 11px;
-            min-height: 2.143em;
-            line-height: 2.143em;
+            padding: @jq-display-list-padding;
+            min-height: @jq-display-list-item-min-height;
+            line-height: @jq-display-list-item-line-height;
 
             &:hover {
-                background-color: #ebebeb;
-                border-color: #ebebeb;
+                background-color: @jq-display-list-border-color;
+                border-color: @jq-display-list-border-color;
+            }
+
+            &.jq-combo-selected {
+                background-color: @combo-selected-bg-color;
+                color: @combo-selected-color;
             }
         }
     }
 
-    .jq-combo-hidden-element{
-        display:none;
-        .animation(~'none 1s ease-out 2s infinite none');
+
+
+    .jq-combo-hidden-element {
+        display: none;
+        .transition(~'opacity 0.5s linear');
     }
 }
