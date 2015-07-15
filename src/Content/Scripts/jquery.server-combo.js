@@ -155,7 +155,8 @@
                 wrapper1: "first-wrapper-container",
                 wrapper2: "second-wrapper-container",
                 wrapper3: "third-wrapper-container",
-                wrapper4: "forth-wrapper-container"
+                wrapper4: "forth-wrapper-container",
+                hiddenClass: "jq-combo-hidden-element"
             },
 
             iconsIdPrefixes: {
@@ -763,6 +764,7 @@
             $inputWrapper: null,
             $input: null,
             $list: null,
+            allIconsIdList: [], // set from createAllIcons method. [ids.errorIcon,ids.invalidIcon, ids.validIcon, ids.spinnerIcon,ids.searchIcon, ids.caretIcon]
             icons: {
                 plugin: null,
                 $caretWrapper: null,
@@ -772,6 +774,7 @@
                 $validWrapper: null,
                 $invalidWrapper: null,
                 $iconsListWrapper: null,
+                listId: null,
                 createAllIcons: function (plugin, $inputWrapper) {
                     var ids = plugin.getIdPrefixes(),
                         iconIds = [
@@ -782,6 +785,7 @@
                             ids.searchIcon,
                             ids.caretIcon
                         ];
+                    this.allIconsIdList = iconIds;
                     for (var i = 0; i < iconIds.length; i++) {
                         var iconId = iconIds[i];
                         this.createIcon(plugin, $inputWrapper, iconId);
@@ -797,12 +801,15 @@
                     /// <returns type=""></returns>
                     var ids = plugin.getIdPrefixes(),
                         settings = plugin.getSettings(),
+                        cssClasses = plugin.getCssClasses(),
                         icons = settings.icons,
                         msgs = settings.messages,
                         message = "",
                         css = "",
                         elementName = "",
+                        hiddenClass = " " + cssClasses.hiddenClass,
                         $elem = null;
+
 
                     if (iconId === ids.caretIcon) {
                         // caret icon
@@ -811,83 +818,116 @@
                     } else if (iconId === ids.searchIcon) {
                         // caret icon
                         elementName = "$searchWrapper";
-                        css = icons.search;
+                        css = icons.search + hiddenClass;
                         message = msgs.searchIcon;
                     } else if (iconId === ids.errorIcon) {
                         // caret icon
                         elementName = "$errorWrapper";
-                        css = icons.error;
+                        css = icons.error + hiddenClass;
                         message = msgs.errorIcon;
                     } else if (iconId === ids.spinnerIcon) {
                         // caret icon
                         elementName = "$spinnerWrapper";
-                        css = icons.spinner;
+                        css = icons.spinner + hiddenClass;
                         message = msgs.spinnerIcon;
                     } else if (iconId === ids.validIcon) {
                         // caret icon
                         elementName = "$validWrapper";
-                        css = icons.valid;
+                        css = icons.valid + hiddenClass;
                         message = msgs.validIcon;
                     } else if (iconId === ids.invalidIcon) {
                         // caret icon
                         elementName = "$invalidWrapper";
-                        css = icons.invalid;
+                        css = icons.invalid + hiddenClass;
                         message = msgs.invalidIcon;
                     }
-
                     $elem = this[elementName];
-                    if (!$elem) {
+                    if ($elem) {
+                        // if already exist.
+                        return $elem;
+                    } else {
+                        // create
                         var $list = this.createListWrapper(plugin, $inputWrapper),
                             id = plugin.getID(), // input id
                             wrapperId = ids.iconWrapper, // jq-combo-icons-wrapper-
+                            appropriateClass = iconId.substr(0, iconId.length - 1), // jq-combo-icon-caret
                             finalIconId = iconId + id, // jq-combo-icon-caret-inputId
-                            onlyIconId = iconId.replace("jq-combo-icon-", ""), // caret-
-                            iconWrapperId = wrapperId + onlyIconId + id,
-                            onlyIconName = onlyIconId.replace("-", "");
+                            onlyIcon = appropriateClass.replace("jq-combo-icon-", ""), // caret
+                            iconWrapperId = wrapperId + onlyIcon + "-" + id;
                         // create
                         var $iconWrapper = $("<li></li>", {
                             id: iconWrapperId,
                             'class': icons.iconWrapper,
                             'data-prop': id,
-                            'data-icon-wrapper': onlyIconName,
-
+                            'data-icon-wrapper': onlyIcon
                         }),
                            $icon = $("<i></i>", {
                                id: finalIconId,
                                'class': css,
                                'data-prop': id,
-                               'data-icon': onlyIconName,
+                               'data-icon': onlyIcon,
                                title: message,
                                'data-original-title': message
                            });
                         $icon.appendTo($iconWrapper);
                         $iconWrapper.prependTo($list);
-                        $icon.tooltip({
-                            animated: 'fade',
-                            placement: 'top',
-                            container: 'body'
-                        });
+                        if (message) {
+                            // if message exist
+                            var listId = this.getListId(),
+                                bodyTooltipContainerId = this.createTooltipContainerAndGetId();
+                            $icon.tooltip({
+                                animated: 'fade',
+                                placement: 'top',
+                                container: '#' + bodyTooltipContainerId
+                            }).data('bs.tooltip')
+                              .tip()
+                              .addClass(appropriateClass);
+                        }
                         $elem = $iconWrapper;
                         this[elementName] = $elem;
                     }
                     return $elem;
                 },
-                createListWrapper: function (plugin, $inputWrapper) {
-                    var elementName = "$iconsListWrapper",
-                        $elem = this[elementName],
-                        objectType = "icon";
-                    if (!$elem) {
-                        var settings = plugin.getSettings(),
-                            ids = plugin.getIdPrefixes(),
+                createTooltipContainerAndGetId: function () {
+                    /// <summary>
+                    ///  create the tooltip container at body level for once
+                    ///  and then send the id.
+                    /// </summary>
+                    /// <returns type=""></returns>
+                    var id = "jq-combo-tooltip-container",
+                        $elem = $.byId(id);
+                    if ($elem.length === 0) {
+                        var $div = $("<div></div>", {
+                            'id': id
+                        });
+                        $div.appendTo($('body'));
+                    }
+                    return id;
+                },
+                getListId: function (plugin) {
+                    if (!this.listId) {
+                        var ids = plugin.getIdPrefixes(),
                             id = plugin.getID(),
                             listWrapperId = ids.iconList,
-                            finalId = listWrapperId + id,
-                            css = settings.icons.iconList,
-                            additionalCss = ids.iconWrapper + "positioning",
-                            $wrapper = $("<ul></ul>", {
-                                id: finalId,
-                                'class': css
-                            });
+                            finalId = listWrapperId + id;
+                        this.listId = finalId;
+                        return finalId;
+                    }
+                    return this.listId;
+                },
+                createListWrapper: function (plugin, $inputWrapper) {
+                    var elementName = "$iconsListWrapper",
+                        $elem = this[elementName];
+                    //objectType = "icon";
+                    if (!$elem) {
+                        var settings = plugin.getSettings(),
+                             css = settings.icons.iconList,
+                             finalId = this.getListId(plugin),
+                             //additionalCss = ids.iconWrapper + "positioning",
+                             $wrapper = $("<ul></ul>", {
+                                 id: finalId,
+                                 'class': css
+                             });
                         //plugin.render.createWrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
                         $wrapper.appendTo($inputWrapper);
 

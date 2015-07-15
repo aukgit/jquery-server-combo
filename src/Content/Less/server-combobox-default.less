@@ -1,20 +1,51 @@
 ﻿@import "override-mvc.variables.less";
 
 
-@dropdown-caret-color: #a5a5a5;
-@dropdown-caret-hover-color: #52ADFD;
+@icon-caret-color: #a5a5a5;
+@icon-caret-hover-color: #a5a5a5;
+
+@icon-search-color: #0094ff;
+@icon-search-hover-color: #3998dd;
+@icon-search-tooltip-color: white;
+@icon-search-tooltip-bg-color: #0094ff;
+
+
+@icon-spinner-color:#0094ff;
+@icon-spinner-hover-color: #348ccb ;
+@icon-spinner-tooltip-color: white;
+@icon-spinner-tooltip-bg-color: #0094ff;
+
+@icon-error-color: #E22013;
+@icon-error-hover-color:#d72a1e;
+@icon-error-tooltip-color: white;
+@icon-error-tooltip-bg-color: #E22013;
+
+@icon-valid-color: #1CAB1C;
+@icon-valid-hover-color: #1CAB1C;
+@icon-valid-tooltip-color: white;
+@icon-valid-tooltip-bg-color:#1CAB1C;
+
+@icon-invalid-color: #E22013;
+@icon-invalid-hover-color: #d72a1e;
+@icon-invalid-tooltip-color: white;
+@icon-invalid-tooltip-bg-color: #E22013;
+
 
 .jq-server-combo {
     &.default-style {
-
-        .dropdown-wrapper-icon {
-            color: @dropdown-caret-color;
+        [data-icon]{
+            color:inherit;
+        }
+        .jq-combo-icon-search {
+            color: @icon-search-color;
 
             &:hover {
                 color: @dropdown-caret-hover-color;
             }
         }
+        .jq-combo-tooltip-container{
 
+        }
         &.jq-combo-hover-over {
             .jq-combo-input {
                 //.box-shadow(~'0 2px 6px rgba(0,0,0,0.2),0 2px 3px rgba(0,0,0,0.05)');
