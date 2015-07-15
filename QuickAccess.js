@@ -99,8 +99,8 @@ defaults = {
             },
 
             iconsIdPrefixes: {
-                invalidIcon: "jq-combo-icon-mark-",
-                validIcon: "jq-combo-icon-mark-",
+                invalidIcon: "jq-combo-icon-invalid-",
+                validIcon: "jq-combo-icon-valid-",
                 spinnerIcon: "jq-combo-icon-spinner-",
                 errorIcon: "jq-combo-icon-error-",
                 caretIcon: "jq-combo-icon-caret-",

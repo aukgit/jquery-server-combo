@@ -155,8 +155,8 @@
             },
 
             iconsIdPrefixes: {
-                invalidIcon: "jq-combo-icon-mark-",
-                validIcon: "jq-combo-icon-mark-",
+                invalidIcon: "jq-combo-icon-invalid-",
+                validIcon: "jq-combo-icon-valid-",
                 spinnerIcon: "jq-combo-icon-spinner-",
                 errorIcon: "jq-combo-icon-error-",
                 caretIcon: "jq-combo-icon-caret-",
@@ -771,12 +771,12 @@
                 createAllIcons: function (plugin, $inputWrapper) {
                     var ids = plugin.getIdPrefixes(),
                         iconIds = [
-                            ids.caretIcon,
-                            ids.searchIcon,
-                            ids.spinnerIcon,
-                            ids.validIcon,
+                            ids.errorIcon,
                             ids.invalidIcon,
-                            ids.errorIcon
+                            ids.validIcon,
+                            ids.spinnerIcon,
+                            ids.searchIcon,
+                            ids.caretIcon
                         ];
                     for (var i = 0; i < iconIds.length; i++) {
                         var iconId = iconIds[i];
