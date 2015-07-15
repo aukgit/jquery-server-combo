@@ -792,6 +792,7 @@
                     /// <param name="iconId"></param>
                     /// <returns type=""></returns>
                     var ids = plugin.getIdPrefixes(),
+                        settings = plugin.getSettings(),
                         icons = settings.icons,
                         css = "",
                         elementName = "",
@@ -854,7 +855,8 @@
                 },
                 createListWrapper: function (plugin, $inputWrapper) {
                     var elementName = "$iconsListWrapper",
-                        $elem = this[elementName];
+                        $elem = this[elementName],
+                        objectType = "icon";
                     if (!$elem) {
                         var settings = plugin.getSettings(),
                             ids = plugin.getIdPrefixes(),
@@ -862,11 +864,14 @@
                             listWrapperId = ids.iconList,
                             finalId = listWrapperId + id,
                             css = settings.icons.iconList,
+                            additionalCss = ids.iconWrapper + "positioning",
                             $wrapper = $("<ul></ul>", {
                                 id: finalId,
                                 'class': css
                             });
+                        //plugin.render.createWrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
                         $wrapper.appendTo($inputWrapper);
+
                         this[elementName] = $wrapper;
                         $elem = $wrapper;
                     }
@@ -979,12 +984,12 @@
                 return $.byId(wrapperIds[level]);
             },
             // Create wrapper and inject into implement.
-            createWrapper: function ($implement, objectTypeName, $wrappingObject, level) {
+            createWrapper: function ($appendingObject, objectTypeName, $wrappingObject, level, additionalCssClass) {
                 /// <summary>
                 /// Creates and returns the final wrapper object.
                 /// Wrap the onject with wrapper and inject into the implement.
                 /// </summary>
-                /// <param name="$implement"></param>
+                /// <param name="$appendingObject">Object where everything will be added to , not necessarily $appendingObject</param>
                 /// <param name="objectTypeName"></param>
                 /// <param name="$wrappingObject"></param>
                 /// <param name="level">By default level: 2</param>
@@ -1003,9 +1008,16 @@
                     level = 2;
                 }
 
+
+                if (!additionalCssClass) {
+                    additionalCssClass = "";
+                } else {
+                    additionalCssClass = " " + additionalCssClass;
+                }
+
                 var $divWrapper1 = $("<div></div>", {
                         id: wrapper1,
-                        'class': cssClass.wrapper1
+                        'class': cssClass.wrapper1 +  additionalCssClass
                     }),
                     $divWrapper2 = $("<div></div>", {
                         id: wrapper2,
@@ -1020,6 +1032,7 @@
                         'class': cssClass.wrapper4
                     });
 
+
                 if (level === 4) {
                     if ($wrappingObject) {
                         $wrappingObject.appendTo($divWrapper4);
@@ -1027,25 +1040,25 @@
                     $divWrapper4.appendTo($divWrapper3);
                     $divWrapper3.appendTo($divWrapper2);
                     $divWrapper2.appendTo($divWrapper1);
-                    $divWrapper1.appendTo($implement);
+                    $divWrapper1.appendTo($appendingObject);
                 } else if (level === 3) {
                     if ($wrappingObject) {
                         $wrappingObject.appendTo($divWrapper3);
                     }
                     $divWrapper3.appendTo($divWrapper2);
                     $divWrapper2.appendTo($divWrapper1);
-                    $divWrapper1.appendTo($implement);
+                    $divWrapper1.appendTo($appendingObject);
                 } else if (level === 2) {
                     if ($wrappingObject) {
                         $wrappingObject.appendTo($divWrapper2);
                     }
                     $divWrapper2.appendTo($divWrapper1);
-                    $divWrapper1.appendTo($implement);
+                    $divWrapper1.appendTo($appendingObject);
                 } else if (level === 1) {
                     if ($wrappingObject) {
                         $wrappingObject.appendTo($divWrapper1);
                     }
-                    $divWrapper1.appendTo($implement);
+                    $divWrapper1.appendTo($appendingObject);
                 }
                 return $divWrapper1;
             },

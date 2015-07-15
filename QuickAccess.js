@@ -105,7 +105,7 @@ defaults = {
                 errorIcon: "jq-combo-icon-error-",
                 caretIcon: "jq-combo-icon-caret-",
                 searchIcon: "jq-combo-icon-search-",
-                input: "jq-input-",
+                input: "jq-combo-input-",
                 list: "jq-combo-list-",
                 iconList: "jq-combo-icons-list-",
                 iconWrapper: "jq-combo-icons-wrapper-",
