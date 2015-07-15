@@ -392,9 +392,9 @@
 
 
 
-                var $inputWrapper = render.$inputWrapper,
-                    $input = render.$input;
-                render.icons.createAllIcons(this, $inputWrapper);
+                var $input = render.$input,
+                    $inputWrapper = render.$inputWrapper;
+                render.icons.createAllIcons(this);
 
                 // trigger events
                 this.setTriggerableEvents($divElement, $implementDiv, $inputWrapper, $input);
@@ -427,6 +427,7 @@
             this.retrieveData.plugin = this;
             this.ajax.plugin = this;
             this.render.plugin = this;
+            this.render.icons.plugin = this;
             this.triggerableEvents.plugin = this;
             this.pagination.plugin = this;
             this.processingCategory.plugin = this;
@@ -549,6 +550,7 @@
         test: function () {
             //this.showSpinner($input);
             this.pagination.getUrl();
+            var ids = this.getIdPrefixes();
         },
         setCurrentTextForNexttimeChecking: function ($input) {
             $input.attr("data-previous-submit", $input.val());
@@ -748,6 +750,9 @@
             caretClick: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
                 var css = plugin.getCssClasses();
                 plugin.classAddRemove($caretWrapper, null, css.comboHover);
+                var ids = plugin.getIdPrefixes();
+                plugin.render.icons.showOnlyIcons([ids.invalidIcon, ids.validIcon]);
+
             },
             caretHoverIn: function (plugin, $div, $implement, $inputWrapper, $input, $caretWrapper, render) {
                 var css = plugin.getCssClasses();
@@ -764,7 +769,6 @@
             $inputWrapper: null,
             $input: null,
             $list: null,
-            allIconsIdList: [], // set from createAllIcons method. [ids.errorIcon,ids.invalidIcon, ids.validIcon, ids.spinnerIcon,ids.searchIcon, ids.caretIcon]
             icons: {
                 plugin: null,
                 $caretWrapper: null,
@@ -774,8 +778,50 @@
                 $validWrapper: null,
                 $invalidWrapper: null,
                 $iconsListWrapper: null,
+                allIconsIdList: [], // set from createAllIcons method. [ids.errorIcon,ids.invalidIcon, ids.validIcon, ids.spinnerIcon,ids.searchIcon, ids.caretIcon]
                 listId: null,
-                createAllIcons: function (plugin, $inputWrapper) {
+                showOnlyIcons: function (iconIds) {
+                    /// <summary>
+                    /// Only given array of iconIds will be visible others will be hidden
+                    /// </summary>
+                    /// <param name="iconIds">array type</param>
+                    /// <returns type=""></returns>
+                    if (iconIds) {
+                        var hiddenListIds = [],
+                            allIconIds = this.allIconsIdList,
+                            i, id, plugin = this.plugin;
+                        for (i = 0; i < allIconIds.length; i++) {
+                            id = allIconIds[i];
+                            if (iconIds.indexOf(id) === -1) {
+                                // don't display that icon
+                                hiddenListIds.push(id);
+                            }
+                        }
+                        // show
+                        for (i = 0; i < iconIds.length; i++) {
+                            id = iconIds[i];
+                            this.showIcon(plugin, id);
+                        }
+                        // hide
+                        for (i = 0; i < hiddenListIds.length; i++) {
+                            id = hiddenListIds[i];
+                            this.hideIcon(plugin, id);
+                        }
+                    }
+                },
+                showIcon: function (plugin, iconId) {
+                    var $icon = this.getOrCreateIcon(plugin, iconId),
+                        css = plugin.getCssClasses(),
+                        hiddenClass = css.hiddenClass;
+                    plugin.classAddRemove($icon, null, hiddenClass);
+                },
+                hideIcon: function (plugin, iconId) {
+                    var $icon = this.getOrCreateIcon(plugin, iconId),
+                        css = plugin.getCssClasses(),
+                        hiddenClass = css.hiddenClass;
+                    plugin.classAddRemove($icon, hiddenClass);
+                },
+                createAllIcons: function (plugin) {
                     var ids = plugin.getIdPrefixes(),
                         iconIds = [
                             ids.errorIcon,
@@ -788,15 +834,14 @@
                     this.allIconsIdList = iconIds;
                     for (var i = 0; i < iconIds.length; i++) {
                         var iconId = iconIds[i];
-                        this.createIcon(plugin, $inputWrapper, iconId);
+                        this.getOrCreateIcon(plugin, iconId);
                     }
                 },
-                createIcon: function (plugin, $inputWrapper, iconId) {
+                getOrCreateIcon: function (plugin, iconId) {
                     /// <summary>
                     /// Create and get icon by this method
                     /// </summary>
                     /// <param name="plugin"></param>
-                    /// <param name="$inputWrapper"></param>
                     /// <param name="iconId"></param>
                     /// <returns type=""></returns>
                     var ids = plugin.getIdPrefixes(),
@@ -815,30 +860,32 @@
                         // caret icon
                         elementName = "$caretWrapper";
                         css = icons.caret;
+                        hiddenClass = "";
                     } else if (iconId === ids.searchIcon) {
                         // caret icon
                         elementName = "$searchWrapper";
-                        css = icons.search + hiddenClass;
+                        css = icons.search;
                         message = msgs.searchIcon;
+                        hiddenClass = "";
                     } else if (iconId === ids.errorIcon) {
                         // caret icon
                         elementName = "$errorWrapper";
-                        css = icons.error + hiddenClass;
+                        css = icons.error;
                         message = msgs.errorIcon;
                     } else if (iconId === ids.spinnerIcon) {
                         // caret icon
                         elementName = "$spinnerWrapper";
-                        css = icons.spinner + hiddenClass;
+                        css = icons.spinner;
                         message = msgs.spinnerIcon;
                     } else if (iconId === ids.validIcon) {
                         // caret icon
                         elementName = "$validWrapper";
-                        css = icons.valid + hiddenClass;
+                        css = icons.valid;
                         message = msgs.validIcon;
                     } else if (iconId === ids.invalidIcon) {
                         // caret icon
                         elementName = "$invalidWrapper";
-                        css = icons.invalid + hiddenClass;
+                        css = icons.invalid;
                         message = msgs.invalidIcon;
                     }
                     $elem = this[elementName];
@@ -847,7 +894,8 @@
                         return $elem;
                     } else {
                         // create
-                        var $list = this.createListWrapper(plugin, $inputWrapper),
+                        var $inputWrapper = plugin.render.$inputWrapper,
+                            $list = this.getOrCreateListWrapper(plugin, $inputWrapper),
                             id = plugin.getID(), // input id
                             wrapperId = ids.iconWrapper, // jq-combo-icons-wrapper-
                             appropriateClass = iconId.substr(0, iconId.length - 1), // jq-combo-icon-caret
@@ -857,7 +905,7 @@
                         // create
                         var $iconWrapper = $("<li></li>", {
                             id: iconWrapperId,
-                            'class': icons.iconWrapper,
+                            'class': icons.iconWrapper + hiddenClass,
                             'data-prop': id,
                             'data-icon-wrapper': onlyIcon
                         }),
@@ -915,7 +963,7 @@
                     }
                     return this.listId;
                 },
-                createListWrapper: function (plugin, $inputWrapper) {
+                getOrCreateListWrapper: function (plugin, $inputWrapper) {
                     var elementName = "$iconsListWrapper",
                         $elem = this[elementName];
                     //objectType = "icon";
@@ -928,7 +976,7 @@
                                  id: finalId,
                                  'class': css
                              });
-                        //plugin.render.createWrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
+                        //plugin.render.GetAndCreateWrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
                         $wrapper.appendTo($inputWrapper);
 
                         this[elementName] = $wrapper;
@@ -951,7 +999,7 @@
                 var elementName = "$inputWrapper",
                     wraperType = "input";
                 if (!this[elementName]) {
-                    this.createWrapper($implement, wraperType); //level 2
+                    this.GetAndCreateWrapper($implement, wraperType); //level 2
                     var $wrapper = this.getWrapper(wraperType, 2);
                     this[elementName] = $wrapper;
                 }
@@ -996,7 +1044,7 @@
                         'data-is-placeholder': isPlaceHolder
                     });
                     // create input wrapper and caret wrapper and caret
-                    // using the createWrapper function
+                    // using the GetAndCreateWrapper function
                     // by default it returns the top wrapper with level 2.
                     var $inputWrapper = this.inputWrapper(plugin, $implement);
                     $inputHtml.prependTo($inputWrapper);
@@ -1043,7 +1091,7 @@
                 return $.byId(wrapperIds[level]);
             },
             // Create wrapper and inject into implement.
-            createWrapper: function ($appendingObject, objectTypeName, $wrappingObject, level, additionalCssClass) {
+            GetAndCreateWrapper: function ($appendingObject, objectTypeName, $wrappingObject, level, additionalCssClass) {
                 /// <summary>
                 /// Creates and returns the final wrapper object.
                 /// Wrap the onject with wrapper and inject into the implement.
@@ -1144,7 +1192,7 @@
                         'class': cssClass.list + " " // hide
                     });
                     // creates the wrapper and injects into the $implement.
-                    this.createWrapper($implement, typeObject, $listHtml);
+                    this.GetAndCreateWrapper($implement, typeObject, $listHtml);
 
                     this[elementName] = $.byId(finalId);
                     $elem = this[elementName];

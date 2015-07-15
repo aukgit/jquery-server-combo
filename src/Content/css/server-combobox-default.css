@@ -1,12 +1,15 @@
 ﻿.jq-server-combo.default-style .jq-combo-icon-search {
-  color: #0094ff;
+  color: #dae6ef;
 }
 .jq-server-combo.default-style .jq-combo-icon-search:hover {
-  color: #3998dd;
+  color: #0094ff;
 }
 .jq-server-combo.default-style .jq-combo-icon-search .tooltip-inner {
-  background-color: #0094ff;
+  background-color: #1c4460;
   color: white;
+}
+.jq-server-combo.default-style .jq-combo-icon-search .tooltip-arrow {
+  border-top-color: #1c4460;
 }
 .jq-server-combo.default-style .jq-combo-icon-spinner {
   color: #0094ff;
@@ -18,11 +21,21 @@
   background-color: #0094ff;
   color: white;
 }
+.jq-server-combo.default-style .jq-combo-icon-spinner .tooltip-arrow {
+  border-top-color: #0094ff;
+}
 .jq-server-combo.default-style .jq-combo-icon-caret {
   color: #a5a5a5;
 }
 .jq-server-combo.default-style .jq-combo-icon-caret:hover {
   color: #0094ff;
+}
+.jq-server-combo.default-style .jq-combo-icon-caret .tooltip-inner {
+  background-color: #000000;
+  color: #ffffff;
+}
+.jq-server-combo.default-style .jq-combo-icon-caret .tooltip-arrow {
+  border-top-color: #000000;
 }
 .jq-server-combo.default-style .jq-combo-icon-valid {
   color: #1cab1c;
@@ -34,6 +47,9 @@
   background-color: #1cab1c;
   color: white;
 }
+.jq-server-combo.default-style .jq-combo-icon-valid .tooltip-arrow {
+  border-top-color: #1cab1c;
+}
 .jq-server-combo.default-style .jq-combo-icon-invalid {
   color: #e22013;
 }
@@ -44,6 +60,9 @@
   background-color: #e22013;
   color: white;
 }
+.jq-server-combo.default-style .jq-combo-icon-invalid .tooltip-arrow {
+  border-top-color: #e22013;
+}
 .jq-server-combo.default-style .jq-combo-icon-error {
   color: #e22013;
 }
@@ -53,5 +72,8 @@
 .jq-server-combo.default-style .jq-combo-icon-error .tooltip-inner {
   background-color: #e22013;
   color: white;
+}
+.jq-server-combo.default-style .jq-combo-icon-error .tooltip-arrow {
+  border-top-color: #e22013;
 }
 /*# sourceMappingURL=server-combobox-default.css.map */

@@ -58,4 +58,11 @@
   background-color: #ebebeb;
   border-color: #ebebeb;
 }
+.jq-server-combo .jq-combo-hidden-element {
+  display: none;
+  -webkit-animation: none 1s ease-out 2s infinite none;
+  -moz-animation: none 1s ease-out 2s infinite none;
+  -o-animation: none 1s ease-out 2s infinite none;
+  animation: none 1s ease-out 2s infinite none;
+}
 /*# sourceMappingURL=server-combobox.css.map */

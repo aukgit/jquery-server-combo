@@ -4,10 +4,10 @@
 @icon-caret-color: #a5a5a5;
 @icon-caret-hover-color: #0094ff;
 
-@icon-search-color: #0094ff;
-@icon-search-hover-color: #3998dd;
+@icon-search-color: #DAE6EF;
+@icon-search-hover-color: #0094ff;
 @icon-search-tooltip-color: white;
-@icon-search-tooltip-bg-color: #0094ff;
+@icon-search-tooltip-bg-color: #1c4460;
 
 
 @icon-spinner-color: #0094ff;
@@ -30,6 +30,22 @@
 @icon-invalid-tooltip-color: white;
 @icon-invalid-tooltip-bg-color: #E22013;
 
+.common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg) {
+    color: @color;
+
+    &:hover {
+        color: @hover;
+    }
+
+    .tooltip-inner {
+        background-color: @tooltip-bg;
+        color: @tooltip-color;
+    }
+
+    .tooltip-arrow {
+        border-top-color: @tooltip-bg;
+    }
+}
 
 .jq-server-combo {
     &.default-style {
@@ -38,97 +54,48 @@
             @hover: @icon-search-hover-color;
             @tooltip-color: @icon-search-tooltip-color;
             @tooltip-bg: @icon-search-tooltip-bg-color;
-
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
-
-            .tooltip-inner {
-                background-color: @tooltip-bg;
-                color: @tooltip-color;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
+
         .jq-combo-icon-spinner {
             @color: @icon-spinner-color;
             @hover: @icon-spinner-hover-color;
             @tooltip-color: @icon-spinner-tooltip-color;
             @tooltip-bg: @icon-spinner-tooltip-bg-color;
-
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
-
-            .tooltip-inner {
-                background-color: @tooltip-bg;
-                color: @tooltip-color;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
 
         .jq-combo-icon-caret {
             @color: @icon-caret-color;
             @hover: @icon-caret-hover-color;
-
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
+
         .jq-combo-icon-valid {
             @color: @icon-valid-color;
             @hover: @icon-valid-hover-color;
             @tooltip-color: @icon-valid-tooltip-color;
             @tooltip-bg: @icon-valid-tooltip-bg-color;
-
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
-
-            .tooltip-inner {
-                background-color: @tooltip-bg;
-                color: @tooltip-color;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
+
         .jq-combo-icon-invalid {
             @color: @icon-invalid-color;
             @hover: @icon-invalid-hover-color;
             @tooltip-color: @icon-invalid-tooltip-color;
             @tooltip-bg: @icon-invalid-tooltip-bg-color;
-
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
-
-            .tooltip-inner {
-                background-color: @tooltip-bg;
-                color: @tooltip-color;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
+
         .jq-combo-icon-error {
             @color: @icon-error-color;
             @hover: @icon-error-hover-color;
             @tooltip-color: @icon-error-tooltip-color;
             @tooltip-bg: @icon-error-tooltip-bg-color;
 
-            color: @color;
-
-            &:hover {
-                color: @hover;
-            }
-
-            .tooltip-inner {
-                background-color: @tooltip-bg;
-                color: @tooltip-color;
-            }
+            .common-icon-behaviours(@color, @hover, @tooltip-color, @tooltip-bg);
         }
+
         &.jq-combo-hover-over {
             .jq-combo-input {
                 //.box-shadow(~'0 2px 6px rgba(0,0,0,0.2),0 2px 3px rgba(0,0,0,0.05)');
