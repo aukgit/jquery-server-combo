@@ -54,7 +54,11 @@ defaults = {
                 custom: ""
             },
             messages: {
-                requesting: "Requesting data..."
+                spinnerIcon: "Requesting data...",
+                validIcon: "Given input is valid.",
+                invalidIcon: "Given input is invalid.",
+                searchIcon: "Search data...",
+                errorIcon: "Sorry! Can't retrieve data."
             },
             selectors: {
                 label: ".jq-server-combo-label",

@@ -110,7 +110,11 @@
                 custom: ""
             },
             messages: {
-                requesting: "Requesting data..."
+                spinnerIcon: "Requesting data...",
+                validIcon: "Given input is valid.",
+                invalidIcon: "Given input is invalid.",
+                searchIcon: "Search data...",
+                errorIcon: "Sorry! Can't retrieve data."
             },
             selectors: {
                 label: ".jq-server-combo-label",
@@ -794,6 +798,8 @@
                     var ids = plugin.getIdPrefixes(),
                         settings = plugin.getSettings(),
                         icons = settings.icons,
+                        msgs = settings.messages,
+                        message = "",
                         css = "",
                         elementName = "",
                         $elem = null;
@@ -806,22 +812,27 @@
                         // caret icon
                         elementName = "$searchWrapper";
                         css = icons.search;
+                        message = msgs.searchIcon;
                     } else if (iconId === ids.errorIcon) {
                         // caret icon
                         elementName = "$errorWrapper";
                         css = icons.error;
+                        message = msgs.errorIcon;
                     } else if (iconId === ids.spinnerIcon) {
                         // caret icon
                         elementName = "$spinnerWrapper";
                         css = icons.spinner;
+                        message = msgs.spinnerIcon;
                     } else if (iconId === ids.validIcon) {
                         // caret icon
                         elementName = "$validWrapper";
                         css = icons.valid;
+                        message = msgs.validIcon;
                     } else if (iconId === ids.invalidIcon) {
                         // caret icon
                         elementName = "$invalidWrapper";
                         css = icons.invalid;
+                        message = msgs.invalidIcon;
                     }
 
                     $elem = this[elementName];
@@ -838,16 +849,24 @@
                             id: iconWrapperId,
                             'class': icons.iconWrapper,
                             'data-prop': id,
-                            'data-icon-wrapper': onlyIconName
+                            'data-icon-wrapper': onlyIconName,
+
                         }),
                            $icon = $("<i></i>", {
                                id: finalIconId,
                                'class': css,
                                'data-prop': id,
-                               'data-icon': onlyIconName
+                               'data-icon': onlyIconName,
+                               title: message,
+                               'data-original-title': message
                            });
                         $icon.appendTo($iconWrapper);
                         $iconWrapper.prependTo($list);
+                        $icon.tooltip({
+                            animated: 'fade',
+                            placement: 'top',
+                            container: 'body'
+                        });
                         $elem = $iconWrapper;
                         this[elementName] = $elem;
                     }
@@ -939,7 +958,7 @@
                     // create input wrapper and caret wrapper and caret
                     // using the createWrapper function
                     // by default it returns the top wrapper with level 2.
-                    var $inputWrapper = this.inputWrapper(plugin,$implement);
+                    var $inputWrapper = this.inputWrapper(plugin, $implement);
                     $inputHtml.prependTo($inputWrapper);
                     $elem = $inputWrapper;
                     if (plugin.isDebugging) {
@@ -1016,9 +1035,9 @@
                 }
 
                 var $divWrapper1 = $("<div></div>", {
-                        id: wrapper1,
-                        'class': cssClass.wrapper1 +  additionalCssClass
-                    }),
+                    id: wrapper1,
+                    'class': cssClass.wrapper1 + additionalCssClass
+                }),
                     $divWrapper2 = $("<div></div>", {
                         id: wrapper2,
                         'class': cssClass.wrapper2
