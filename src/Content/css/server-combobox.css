@@ -25,6 +25,7 @@
   padding: 0;
   margin: 0;
   z-index: 1002;
+  cursor: pointer;
 }
 .jq-server-combo .jq-combo-icons-list .jq-combo-icons-wrapper {
   list-style: none;
@@ -32,18 +33,25 @@
   margin-left: 4px;
   margin-left: 0.4rem;
 }
-.jq-server-combo .jq-combo-list {
-  margin: 0;
-  padding: 0;
+.jq-server-combo .jq-combo-list-wrapper .third-wrapper-container {
   border: 2px solid #f0f0f0;
-  height: 200px;
-  height: 20rem;
-  overflow: auto;
+  height: 250px;
+  height: 25rem;
   width: 294px;
+  width: 29.4rem;
   z-index: 1000;
   background-color: white;
   position: absolute;
   top: -1px;
+  top: -0.1rem;
+}
+.jq-server-combo .jq-combo-list {
+  margin: 28px 0 0 0;
+  padding: 0;
+  height: 200px;
+  height: 20rem;
+  overflow: auto;
+  background-color: inherit;
 }
 .jq-server-combo .jq-combo-list li {
   list-style: none;

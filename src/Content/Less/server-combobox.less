@@ -40,6 +40,7 @@
         padding: 0;
         margin: 0;
         z-index: @jq-combo-icons-zIndex;
+        cursor: pointer;
 
         .jq-combo-icons-wrapper {
             list-style: none;
@@ -48,17 +49,27 @@
         }
     }
 
+    .jq-combo-list-wrapper {
+        .third-wrapper-container {
+            border: 2px solid @jq-display-list-border-color;
+            //overflow: auto;
+            .height(250px);
+            .width(@inputs-max-width);
+            z-index: @jq-display-list-zIndex;
+            background-color: @jq-display-list-bg-color;
+            position: absolute;
+            .top(-1px);
+        }
+    }
+
     .jq-combo-list {
-        margin: 0;
+        margin: 28px 0 0 0;
         padding: 0;
-        border: 2px solid @jq-display-list-border-color;
+        //border: 2px solid @jq-display-list-border-color;
         .height(@jq-display-list-height);
         overflow: auto;
-        width: @inputs-max-width;
-        z-index: @jq-display-list-zIndex;
-        background-color: @jq-display-list-bg-color;
-        position: absolute;
-        top: -1px;
+        //width: @inputs-max-width;
+        background-color: inherit;
 
         li {
             list-style: none;

@@ -687,11 +687,13 @@
             /// <param name="add"></param>
             /// <param name="remove"></param>
             /// <returns type=""></returns> 
-            if (!this.isEmpty(add)) {
-                $element.addClass(add);
-            }
-            if (!this.isEmpty(remove)) {
-                $element.removeClass(remove);
+            if (!this.isEmpty($element)) {
+                if (!this.isEmpty(add)) {
+                    $element.addClass(add);
+                }
+                if (!this.isEmpty(remove)) {
+                    $element.removeClass(remove);
+                }
             }
         },
 
@@ -777,20 +779,38 @@
                 /// <returns type=""></returns>
 
             },
-            listItemClicked: function (plugin, $list, $listOfItems, $item, evnt) {
+            listItemClicked: function ($item, evnt) {
 
-                var selectionClass = "jq-combo-selected",
+                var plugin = this.plugin,
+                    settings = plugin.getSettings(),
+                    render = plugin.render,
+                    $listOfItems = render.$listOfItems,
+                    $input = render.$input,
+                    selectionClass = "jq-combo-selected",
                     $selectedItems = $listOfItems.filter("." + selectionClass);
-                plugin.classAddRemove($selectedItems, null, selectionClass);
-                plugin.classAddRemove($item, selectionClass);
+
+                if (settings.isMultipleSelect === false) {
+                    // single select
+                    if ($selectedItems.length > 0) {
+                        $selectedItems.removeClass(selectionClass);
+                    }
+                    $item.addClass(selectionClass);
+                    $item.addClass("animated");
+                    $item.addClass("fadeIn");
+                    $input.attr("data-selected-value", $item.attr('data-id'));
+                    $input.attr("value", $item.text());
+                }
             }
         },
 
+        // all methods are create or get method, means create if not exist in efficient manner or else send from cache.
+        // only get methods don't create anything only returns the object.
         render: {
             plugin: null,
             $inputWrapper: null,
             $input: null,
             $list: null,
+            $listOfItems: null,
             icons: {
                 plugin: null,
                 $caretWrapper: null,
@@ -1015,7 +1035,7 @@
                                  id: finalId,
                                  'class': css
                              });
-                        //plugin.render.GetAndCreateWrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
+                        //plugin.render._wrapper($inputWrapper, objectType, $wrapper, 2, additionalCss);
                         $wrapper.appendTo($inputWrapper);
 
                         this[elementName] = $wrapper;
@@ -1038,7 +1058,7 @@
                 var elementName = "$inputWrapper",
                     wraperType = "input";
                 if (!this[elementName]) {
-                    this.GetAndCreateWrapper($implement, wraperType); //level 2
+                    this._wrapper($implement, wraperType); //level 2
                     var $wrapper = this.getWrapper(wraperType, 2);
                     this[elementName] = $wrapper;
                 }
@@ -1083,11 +1103,11 @@
                         'data-is-placeholder': isPlaceHolder
                     });
                     // create input wrapper and caret wrapper and caret
-                    // using the GetAndCreateWrapper function
+                    // using the _wrapper function
                     // by default it returns the top wrapper with level 2.
                     var $inputWrapper = this.inputWrapper(plugin, $implement);
                     $inputHtml.prependTo($inputWrapper);
-                    $elem = $inputWrapper;
+                    $elem = $inputHtml;
                     if (plugin.isDebugging) {
                         console.log($elem);
                     }
@@ -1130,7 +1150,7 @@
                 return $.byId(wrapperIds[level]);
             },
             // Create wrapper and inject into implement.
-            GetAndCreateWrapper: function ($appendingObject, objectTypeName, $wrappingObject, level, additionalCssClass) {
+            _wrapper: function ($appendingObject, objectTypeName, $wrappingObject, level, additionalCssClass) {
                 /// <summary>
                 /// Creates and returns the final wrapper object.
                 /// Wrap the onject with wrapper and inject into the implement.
@@ -1232,7 +1252,7 @@
                         'class': cssClass.list + " " // hide
                     });
                     // creates the wrapper and injects into the $implement.
-                    this.GetAndCreateWrapper($implement, typeObject, $listHtml, 2, wrapperClass);
+                    this._wrapper($implement, typeObject, $listHtml, 3, wrapperClass);
 
                     this[elementName] = $.byId(finalId);
                     $elem = this[elementName];
@@ -1274,6 +1294,8 @@
                     arrayList = new Array(len + 5),
                     itemCss = cssClass.listItem,
                     isClassExist = !plugin.isEmpty(itemCss),
+                    //$inputWrapper = plugin.render.$inputWrapper,
+                    //$input = plugin.render.$input,
                     $list = this.getList();
 
                 for (var i = 0; i < len; i++) {
@@ -1295,8 +1317,13 @@
 
                 var $listItems = $list.find("li");
                 $listItems.on('click', function (evt) {
-                    triEvents.listItemClicked(plugin, $list, $listItems, $(this), evt);
+                    var t0 = performance.now();
+                    //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
+                    triEvents.listItemClicked($(this), evt);
+                    var t1 = performance.now();
+                    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
                 });
+                this.$listOfItems = $listItems;
             }
         },
         ajax: {
@@ -1489,8 +1516,8 @@
             }
         },
 
+        // route and configure url and then get the data from the url.
         retrieveData: {
-            // route and configure url and then get the data from the url.
             plugin: null,
             getRegularData: function (url) {
                 var plugin = this.plugin,
