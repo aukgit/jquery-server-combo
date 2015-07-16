@@ -377,8 +377,9 @@
 
 
                 // render elements and retrieve elements in plugin object
-                render.input(this, $divElement, $implementDiv);
-                render.icons.createAllIcons(this);
+                render.input(this, $divElement, $implementDiv); // create input with it's wrapper
+                render.icons.createAllIcons(this); // create all icons with it's wrapper
+                render.select(this, $implementDiv); // create select
 
 
                 // send request to the server
@@ -780,24 +781,25 @@
 
             },
             listItemClicked: function ($item, evnt) {
-
                 var plugin = this.plugin,
                     settings = plugin.getSettings(),
                     render = plugin.render,
+                    $select = render.$select,
                     $listOfItems = render.$listOfItems,
                     $input = render.$input,
                     selectionClass = "jq-combo-selected",
-                    $selectedItems = $listOfItems.filter("." + selectionClass);
+                    selectionCompleteAttr = "jq-combo-selected animated fadeIn",
+                    $selectedItems = $listOfItems.filter("." + selectionClass),
+                    selectedValue = $item.attr("data-id");
 
                 if (settings.isMultipleSelect === false) {
                     // single select
                     if ($selectedItems.length > 0) {
-                        $selectedItems.removeClass(selectionClass);
+                        $selectedItems.removeAttr("class");
                     }
-                    $item.addClass(selectionClass);
-                    $item.addClass("animated");
-                    $item.addClass("fadeIn");
-                    $input.attr("data-selected-value", $item.attr('data-id'));
+                    $select.html("<option selected='selected' value='" + selectedValue + "'></option>");
+                    $item.attr("class", selectionCompleteAttr);
+                    $input.attr("data-selected-value", selectedValue);
                     $input.attr("value", $item.text());
                 }
             }
@@ -811,6 +813,33 @@
             $input: null,
             $list: null,
             $listOfItems: null,
+            $select: null,
+            select: function (plugin, $implement) {
+                /// <summary>
+                /// Create select for this combobox.
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <param name="$implement"></param>
+                /// <returns type=""></returns>
+                var elementName = "$select",
+                   $elem = this[elementName];
+
+                if (plugin.isEmpty($elem)) {
+                    var css = plugin.getCssClasses(),
+                        hiddenClass = css.hiddenClass,
+                        attrId = plugin.getID(),
+                        attrName = plugin.getName();
+                    var $selectHtml = $("<select />", {
+                        id: attrId,
+                        name: attrName,
+                        'class': hiddenClass
+                    });
+                    $selectHtml.prependTo($implement);
+                    $elem = $selectHtml;
+                    this[elementName] = $elem;
+                }
+                return $elem;
+            },
             icons: {
                 plugin: null,
                 $caretWrapper: null,
@@ -1286,6 +1315,7 @@
                 var cssClass = plugin.getCssClasses(),
                     settings = plugin.getSettings(),
                     events = plugin.getEvents(),
+                    render = this,
                     triEvents = plugin.triggerableEvents,
                     len = data.length,
                     inputId = plugin.getID(),
@@ -1297,33 +1327,36 @@
                     //$inputWrapper = plugin.render.$inputWrapper,
                     //$input = plugin.render.$input,
                     $list = this.getList();
-
-                for (var i = 0; i < len; i++) {
-                    var row = data[i],
-                        id = row[idField],
-                        display = row[displayField],
-                        arrayIndex = i + 1,
-                        htmlId = "id='" + inputId + "-" + id + "'";
-                    if (isClassExist === true) {
-                        arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
-                    } else {
-                        // no class
-                        arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
+                function renderList() {
+                    for (var i = 0; i < len; i++) {
+                        var row = data[i],
+                            id = row[idField],
+                            display = row[displayField],
+                            arrayIndex = i + 1,
+                            htmlId = "id='" + inputId + "-" + id + "'";
+                        if (isClassExist === true) {
+                            arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
+                        } else {
+                            // no class
+                            arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
+                        }
                     }
-                }
-                // todo : retrieve pagination list items 0 and len + 2
-                var ulContents = arrayList.join("");
-                $list.html(ulContents);
+                    // todo : retrieve pagination list items 0 and len + 2
+                    var ulContents = arrayList.join("");
+                    $list.html(ulContents);
 
-                var $listItems = $list.find("li");
-                $listItems.on('click', function (evt) {
-                    var t0 = performance.now();
-                    //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
-                    triEvents.listItemClicked($(this), evt);
-                    var t1 = performance.now();
-                    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-                });
-                this.$listOfItems = $listItems;
+                    var $listItems = $list.find("li");
+                    $listItems.on("click", function (evt) {
+                        var t0 = performance.now();
+                        //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
+                        triEvents.listItemClicked($(this), evt);
+                        var t1 = performance.now();
+                        console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+                    });
+                    render.$listOfItems = $listItems;
+                }
+
+                renderList();
             }
         },
         ajax: {
@@ -1411,8 +1444,8 @@
                         console.log(response);
                     }
                     // show spinner only
-                    render.icons.showOnlyIcons([ids.caretIcon, ids.searchIcon]);
                     retrieveData.process(plugin, render, $div, $implement, $input, response);
+                    render.icons.showOnlyIcons([ids.caretIcon, ids.searchIcon]);
                 });
 
                 this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
