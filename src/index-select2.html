@@ -19,8 +19,7 @@
     <link href="content/css/validator.css" rel="stylesheet" />
     <link href="content/css/menu-modify.css" rel="stylesheet" />
     <link href="content/css/header.css" rel="stylesheet" />
-    <link href="content/css/server-combobox.css" rel="stylesheet" />
-    <link href="content/css/server-combobox-default.css" rel="stylesheet" />
+    <link href="content/css/select2.css" rel="stylesheet" />
     <link href="content/css/utilities.css" rel="stylesheet" />
     <!--Main css editor-templates.css-->
     <!--[if lt IE 9]>
@@ -28,7 +27,7 @@
         <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 </head>
-<body>
+<body id="select2-body">
     <!--[if lt IE 9]>
     <div class="container-fuild browser-update">
     <div class="row">
@@ -123,6 +122,7 @@
                                  data-optimized="true"
                                  data-requesting-label="Requesting X..."
                                  data-tag="true">
+                                <select name="ProductID" id="ProductID"></select>
                             </div>
                             <a data-toggle="tooltip" data-original-title="Please select your exact country, it's going to verify against your IP." title="" class="tooltip-show"><span class="description-icon"></span></a>
                         </div>
@@ -149,6 +149,7 @@
     <script src="Content/Scripts/jquery.validate.unobtrusive.js"></script>
     <script src="Content/Scripts/jquery.server-validate.js"></script>
     <script src="Content/Scripts/jquery.server-combo.js"></script>
+    <script src="Content/Scripts/select2.full.js"></script>
     <script src="Content/Scripts/every-page.js"></script>
 </body>
 </html>

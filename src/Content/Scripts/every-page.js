@@ -1,6 +1,5 @@
 ﻿/// <reference path="bootstrap-datetimepicker.js" />
 /// <reference path="bootstrap.js" />
-/// <reference path="byId.js" />
 /// <reference path="every-page.js" />
 /// <reference path="jquery-2.1.4-vsdoc.js" />
 /// <reference path="jquery-2.1.4.js" />
@@ -8,6 +7,7 @@
 /// <reference path="jquery.server-combo.js" />
 /// <reference path="jquery.validate.min.js" />
 /// <reference path="moment.js" />
+/// <reference path="byId.js" />
 /*!
  * Written by Alim Ul Karim
  * http://alimkarim.com
@@ -71,19 +71,40 @@ $.genericPage = function() {
     $formRows.attr("data-is-validate", "true");
     $processForm.serverValidate();
 
-    $processForm.serverComboBox();
-
-
-
-    $.byId("register-form").submit(function (e) {
-        e.preventDefault();
-        var $fromx = $(this);
-  
-        //$inputs.valid();
-        //$.serverValidate();
-    
-    });
-
+    var $jQComboBody = $.byId("jq-combo-body"),
+        $select2Body = $.byId("select2-body");
+    if ($jQComboBody.length > 0) {
+        $processForm.serverComboBox();
+    } else if ($select2Body.length === 1) {
+        var url = "//localhost:43236/odata/Products1";
+        var jsonData = { data: "value" };
+        var isInTestingMode = true;
+        jQuery.ajax({
+            method: "POST", // by default "GET"
+            url: url,
+            data: jsonData, // PlainObject or String or Array
+            dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
+            //processData: true, // false , By default, data passed in to the data option as an object (technically, anything other than a string) will be processed and transformed into a query string, fitting to the default content-type "application/x-www-form-urlencoded". If you want to send a DOMDocument, or other non-processed data, set this option to false.
+            //cache:true | false //by default true
+            //contents : undefined, // An object of string/regular-expression pairs that determine how jQuery will parse the response, given its content type
+            //crossDomain: false ,  by default false
+            //async: true | false , // by default true,
+            //beforeSend: function( xhr ) {
+            //  xhr.overrideMimeType( "text/plain; charset=x-user-defined" );
+            //}
+        }).done(function (response) {
+            if (isInTestingMode) {
+                console.log(response);
+            }
+        }).fail(function (jqXHR, textStatus, exceptionMessage) {
+            console.log("Request failed: " + exceptionMessage);
+        }).always(function () {
+            console.log("complete");
+        });
+        $("#ProductID").select2({
+            
+        });
+    }
   
 }
 
