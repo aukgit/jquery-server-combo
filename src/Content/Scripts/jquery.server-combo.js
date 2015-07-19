@@ -698,7 +698,15 @@
             }
         },
 
-
+        asyncLoop: function (o) {
+            var i = -1;
+            var loop = function () {
+                i++;
+                if (i === o.length) { o.callback(); return; }
+                o.asyncLooping(loop, i);
+            }
+            loop();//init
+        },
         //Calls all the events bindings
         setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
             /// <summary>
@@ -1327,36 +1335,42 @@
                     //$inputWrapper = plugin.render.$inputWrapper,
                     //$input = plugin.render.$input,
                     $list = this.getList();
-                function renderList() {
-                    for (var i = 0; i < len; i++) {
-                        var row = data[i],
-                            id = row[idField],
-                            display = row[displayField],
-                            arrayIndex = i + 1,
-                            htmlId = "id='" + inputId + "-" + id + "'";
-                        if (isClassExist === true) {
-                            arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
-                        } else {
-                            // no class
-                            arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
-                        }
+
+                // direct calling function.
+                asyncLoop({
+                    length: len, // < len
+                    asyncLooping: function (loop, i) {
+                        setTimeout(function () {
+                            var row = data[i],
+                             id = row[idField],
+                             display = row[displayField],
+                             arrayIndex = i + 1,
+                             htmlId = "id='" + inputId + "-" + id + "'";
+                            if (isClassExist === true) {
+                                arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
+                            } else {
+                                // no class
+                                arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
+                            }
+                        }, 0);
+                    },
+                    callback: function () {
+                        var ulContents = arrayList.join("");
+                        $list.html(ulContents);
+
+                        var $listItems = $list.find("li");
+                        $listItems.on("click", function (evt) {
+                            var t0 = performance.now();
+                            //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
+                            triEvents.listItemClicked($(this), evt);
+                            var t1 = performance.now();
+                            console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+                        });
+                        render.$listOfItems = $listItems;
+                        console.log("Complete rendering.");
                     }
-                    // todo : retrieve pagination list items 0 and len + 2
-                    var ulContents = arrayList.join("");
-                    $list.html(ulContents);
-
-                    var $listItems = $list.find("li");
-                    $listItems.on("click", function (evt) {
-                        var t0 = performance.now();
-                        //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
-                        triEvents.listItemClicked($(this), evt);
-                        var t1 = performance.now();
-                        console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-                    });
-                    render.$listOfItems = $listItems;
-                }
-
-                renderList();
+                });
+          
             }
         },
         ajax: {
