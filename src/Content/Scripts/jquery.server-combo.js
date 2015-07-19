@@ -1337,10 +1337,12 @@
                     $list = this.getList();
 
                 // direct calling function.
-                asyncLoop({
+                plugin.asyncLoop({
                     length: len, // < len
                     asyncLooping: function (loop, i) {
+                        console.log("Async Loop started : " + len);
                         setTimeout(function () {
+                            console.log("loop : " + i);
                             var row = data[i],
                              id = row[idField],
                              display = row[displayField],
@@ -1352,6 +1354,7 @@
                                 // no class
                                 arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
                             }
+                            loop();
                         }, 0);
                     },
                     callback: function () {
