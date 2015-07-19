@@ -4,6 +4,8 @@ using System.Net;
 using System.Web.Http;
 using System.Web.Http.ModelBinding;
 using System.Web.Http.OData;
+using System.Web.Mvc;
+using System.Web.Routing;
 using SampleApp.Models;
 
 namespace SampleApp.Controllers
@@ -26,8 +28,10 @@ namespace SampleApp.Controllers
 
         // GET: odata/Products1
         [EnableQuery]
+        [OutputCache()]
         public IQueryable<Product> GetProducts1()
         {
+            // how to get the filter string here.
             return db.Products;
         }
 
@@ -90,7 +94,7 @@ namespace SampleApp.Controllers
         }
 
         // PATCH: odata/Products1(5)
-        [AcceptVerbs("PATCH", "MERGE")]
+        [System.Web.Http.AcceptVerbs("PATCH", "MERGE")]
         public IHttpActionResult Patch([FromODataUri] long key, Delta<Product> patch)
         {
             Validate(patch.GetEntity());

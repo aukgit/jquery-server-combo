@@ -13,8 +13,12 @@
  * http://alimkarim.com
  * me{at}alimkarim.com
 */
-
-$.genericPage = function() {
+var combineAttribute = function ($elem, attr, hostUrl) {
+    var currentUrl = $elem.attr(attr);
+    var combine = hostUrl + currentUrl;
+    $elem.attr(attr, combine);
+}
+$.genericPage = function () {
     function transactionStatusHide() {
         var $transactionStatus = $(".transaction-status");
         if ($transactionStatus.length > 0) {
@@ -61,51 +65,53 @@ $.genericPage = function() {
     });
 
     // start processing here for this plugin.
-    var $urlInput = $.byId("get-url");
-    var $processForm = $.byId("process-form");
+    var $processForm = $.byId("process-form"),
+        $select2 = $.byId("ProductID"),
 
-    var $inputs = $processForm.find("input");
-    $inputs.attr('data-url', $urlInput.val());
-    var $formRows = $processForm.find(".form-row");
-
-    $formRows.attr("data-is-validate", "true");
-    $processForm.serverValidate();
-
-    var $jQComboBody = $.byId("jq-combo-body"),
+        $jQComboBody = $.byId("jq-combo-body"),
+        hostUrl = $.byId("host-url").val(), //  "//localhost:43236/"
         $select2Body = $.byId("select2-body");
     if ($jQComboBody.length > 0) {
+        var $implement = $processForm.find(".jq-server-combo-implement");
+        combineAttribute($implement, "data-url", hostUrl);
+        combineAttribute($implement, "data-next-page-url", hostUrl);
         $processForm.serverComboBox();
     } else if ($select2Body.length === 1) {
-        var url = "//localhost:43236/odata/Products1";
-        var jsonData = { data: "value" };
+        var url = hostUrl + "odata/Products1";
         var isInTestingMode = true;
         jQuery.ajax({
-            method: "POST", // by default "GET"
+            method: "GET", // by default "GET"
             url: url,
-            data: jsonData, // PlainObject or String or Array
             dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
-            //processData: true, // false , By default, data passed in to the data option as an object (technically, anything other than a string) will be processed and transformed into a query string, fitting to the default content-type "application/x-www-form-urlencoded". If you want to send a DOMDocument, or other non-processed data, set this option to false.
-            //cache:true | false //by default true
-            //contents : undefined, // An object of string/regular-expression pairs that determine how jQuery will parse the response, given its content type
-            //crossDomain: false ,  by default false
-            //async: true | false , // by default true,
-            //beforeSend: function( xhr ) {
-            //  xhr.overrideMimeType( "text/plain; charset=x-user-defined" );
-            //}
         }).done(function (response) {
             if (isInTestingMode) {
                 console.log(response);
             }
+            var data = response["value"],
+                len = data.length,
+                idField = "ProductID",
+                displayField = "ProductName",
+                inputId = "ProductID",
+                arrayList = new Array(len + 5);
+            for (var i = 0; i < len; i++) {
+                var row = data[i],
+                    id = row[idField],
+                    display = row[displayField],
+                    arrayIndex = i + 1,
+                    htmlId = "id='" + inputId + "-" + id + "'";
+                arrayList[arrayIndex] = "<option " + htmlId + " value='" + id + "'>" + display + "</option>";
+            }
+            var ulContents = arrayList.join("");
+            $select2.html(ulContents);
+            $select2.select2();
         }).fail(function (jqXHR, textStatus, exceptionMessage) {
             console.log("Request failed: " + exceptionMessage);
         }).always(function () {
             console.log("complete");
         });
-        $("#ProductID").select2({
-            
-        });
+
     }
-  
+
 }
 
 
