@@ -697,16 +697,6 @@
                 }
             }
         },
-
-        asyncLoop: function (o) {
-            var i = -1;
-            var loop = function () {
-                i++;
-                if (i === o.length) { o.callback(); return; }
-                o.asyncLooping(loop, i);
-            }
-            loop();//init
-        },
         //Calls all the events bindings
         setTriggerableEvents: function ($div, $implement, $inputWrapper, $input) {
             /// <summary>
@@ -1337,43 +1327,41 @@
                     $list = this.getList();
 
                 // direct calling function.
-                plugin.asyncLoop({
-                    length: len, // < len
-                    asyncLooping: function (loop, i) {
-                        console.log("Async Loop started : " + len);
-                        setTimeout(function () {
-                            console.log("loop : " + i);
-                            var row = data[i],
-                             id = row[idField],
-                             display = row[displayField],
-                             arrayIndex = i + 1,
-                             htmlId = "id='" + inputId + "-" + id + "'";
-                            if (isClassExist === true) {
-                                arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
-                            } else {
-                                // no class
-                                arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
-                            }
-                            loop();
-                        }, 0);
-                    },
-                    callback: function () {
-                        var ulContents = arrayList.join("");
-                        $list.html(ulContents);
+                console.log("Async Loop started : " + len);
+                var callback = function () {
+                    var ulContents = arrayList.join("");
+                    $list.html(ulContents);
 
-                        var $listItems = $list.find("li");
-                        $listItems.on("click", function (evt) {
-                            var t0 = performance.now();
-                            //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
-                            triEvents.listItemClicked($(this), evt);
-                            var t1 = performance.now();
-                            console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-                        });
-                        render.$listOfItems = $listItems;
-                        console.log("Complete rendering.");
+                    var $listItems = $list.find("li");
+                    $listItems.on("click", function (evt) {
+                        var t0 = performance.now();
+                        //(plugin, $list, $listOfItems, $item, settings, $inputWrapper, $input, evnt)
+                        triEvents.listItemClicked($(this), evt);
+                        var t1 = performance.now();
+                        console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+                    });
+                    render.$listOfItems = $listItems;
+                    console.log("Complete rendering.");
+                };
+
+                setTimeout(function () {
+                    for (var i = 0; i < len; i++) {
+                        console.log("loop : " + i);
+                        var row = data[i],
+                            id = row[idField],
+                            display = row[displayField],
+                            arrayIndex = i + 1,
+                            htmlId = "id='" + inputId + "-" + id + "'";
+                        if (isClassExist === true) {
+                            arrayList[arrayIndex] = "<li " + htmlId + " class='" + itemCss + "' data-id='" + id + "'>" + display + "</li>";
+                        } else {
+                            // no class
+                            arrayList[arrayIndex] = "<li " + htmlId + " data-id='" + id + "'>" + display + "</li>";
+                        }
                     }
-                });
-          
+                    callback();
+                }, 0);
+                
             }
         },
         ajax: {
