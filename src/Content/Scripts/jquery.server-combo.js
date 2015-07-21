@@ -1,9 +1,5 @@
 /// <reference path="byId.js" />
-/// <reference path="bootstrap.js" />
-/// <reference path="jquery-2.1.4.js" />
 /// <reference path="jquery-2.1.4-vsdoc.js" />
-/// <reference path="jquery.validate.min.js" />
-/// <reference path="jquery.validate.unobtrusive.js" />
 /*!
  * jQuery Server ComboBox 1.0 
  * (a plugin for ASP.NET MVC or any server side programming language)
@@ -66,11 +62,11 @@
             placeHolder: "",
             placeHolderValue: "",
             placeHolderDisable: false,
+            dontPaginateIfDataLessThan: 4000, // only works for regular pagination doesn't work on odata. Odata will be paginated.
             isDynamicLoad: true,
             isTag: false,
             isLiveSearch: false,
             isOdata: false,
-            isOdataPagefromServer: true,
             isMultipleSelect: true,
             isSelectFirstIndexByDefault: true,
             submitMethod: "Get",
@@ -97,6 +93,7 @@
             additionalCSS: "",
             singleItemClass: "",
             isDependableCombo: true,
+            isSearchOnServerSide: true,
             dependablePropertyName: "",
             inputValidationRegularExpression: "",
             elementCreatingId: "",
@@ -157,7 +154,8 @@
                 wrapper2: "second-wrapper-container",
                 wrapper3: "third-wrapper-container",
                 wrapper4: "forth-wrapper-container",
-                hiddenClass: "jq-combo-hidden-element"
+                hiddenClass: "jq-combo-hidden-element",
+                comboSingleItem: "jq-combo-single-item"
             },
 
             iconsIdPrefixes: {
@@ -184,6 +182,9 @@
                 errorMessage: null
             },
             events: {
+                additionalOptionHtml: function ($list, $item) {
+                    return "";
+                },
                 iconCreated: function ($div, $input, $iconContainer) { },
                 inputCreated: function (plugin, $div, $implementDiv, $input) { },
                 listCreated: function (plugin, $div, $implementDiv, $input, data) { },
@@ -271,7 +272,6 @@
             { setting: "selfUI", attr: "data-original-self-ui" },
             { setting: "maxDisplayItems", attr: "data-max-search-item-display" },
             { setting: "isOdata", attr: "data-odata" },
-            { setting: "isOdataPagefromServer", attr: "data-odata-is-paged-from-server" },
             { setting: "delay", attr: "data-is-keypress-delay" },
             { setting: "additionalCSS", attr: "data-additional-css" },
             { setting: "isLiveSearch", attr: "data-live-search" },
@@ -296,7 +296,9 @@
             { setting: "isTag", attr: "data-tag" },
             { setting: "isSelectFirstIndexByDefault", attr: "data-is-select-first-item" },
             { setting: "isTag", attr: "data-tag" },
-            { setting: "submitMethod", attr: "data-submit-method" }
+            { setting: "submitMethod", attr: "data-submit-method" },
+            { setting: "isSearchOnServerSide", attr: "data-search-serverside" },
+            { setting: "dontPaginateIfDataLessThan", attr: "data-nopaginatation-if-data-less" }
 
         ];
         for (var i = 0; i < crossMatch.length; i++) {
@@ -347,8 +349,9 @@
                 var plugin = this.plugin,
                     settings = plugin.getSettings();
 
-                var isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
-                    isRegularPaged = settings.isPaginationEnable && !settings.isOdata,
+                var isDataLessPagination = !(settings.totalItemsCountOnServer < settings.dontPaginateIfDataLessThan), // pagination not required.
+                    isRegularUrl = !settings.isPaginationEnable && !settings.isOdata,
+                    isRegularPaged = settings.isPaginationEnable && !settings.isOdata && isDataLessPagination,
                     isOdataOnly = !settings.isPaginationEnable && settings.isOdata,
                     isOdataPaged = settings.isPaginationEnable && settings.isOdata;
                 if (isRegularUrl === true) {
@@ -386,12 +389,15 @@
                 this.processDiv($divElement, $implementDiv);
 
                 // add classes
+
                 this.classAddRemove($divElement, css.styleSetName);
                 this.classAddRemove($implementDiv, css.styleSetName);
                 this.classAddRemove($divElement, "jq-server-combo");
                 this.classAddRemove($implementDiv, "jq-server-combo-implement");
                 this.classAddRemove($implementDiv, "implement");
-
+                if (this.isSingleItemClassAdd) {
+                    this.classAddRemove($divElement, css.comboSingleItem);
+                }
                 $divElement.attr("data-style", css.styleSetName);
 
 
@@ -410,6 +416,14 @@
                 this.test();
 
             }
+        },
+        isSingleItemClassAdd: function () {
+            /// <summary>
+            /// Weather add the class of single-item or not
+            /// </summary>
+            /// <returns type="">T/F</returns>
+            var settings = this.getSettings();
+            return settings.isMultipleSelect || settings.isPagination;
         },
         setDefaultInvalidSettings: function () {
             /// <summary>
@@ -437,6 +451,7 @@
             this.triggerableEvents.plugin = this;
             this.pagination.plugin = this;
             this.processingCategory.plugin = this;
+            this.search.plugin = this;
         },
         getSettings: function () {
             return this.settings;
@@ -583,9 +598,6 @@
             }
             return returnStatement;
         },
-        createInput: function () {
-
-        },
         inputProcessWithBlurEvent: function ($div, $input, url) {
             var self = this,
                 settings = this.getSettings(),
@@ -605,33 +617,6 @@
             //        isIconsVisible = false;
             //    }
             //});
-        },
-        blurEvent: function (event, $div, self, $input, url) {
-            //var isRequstValid = !self.isInProcessingMode($div) || self.isMultipleRequestAllowed();
-            //// if we are allowing to send multiple request while one is already being processing in the server.
-            //if (isRequstValid) {
-            //    var $inputNew = $input;///$(this);
-            //    var isDuplicateRequestAllowed = self.dontSendSameRequestTwice() && !self.isPreviousRequestIsSame($div, $inputNew, url);
-            //    isRequstValid = isDuplicateRequestAllowed || !self.dontSendSameRequestTwice();
-            //    // check if same request is allowed to send twice.
-            //    if (isRequstValid) {
-
-            //        // if validation request before sending request.
-            //        var validationRequires = self.isInputValidationRequirestoSendRequest();
-
-            //        // is input needed to be valid before send the request.
-            //        isRequstValid = (validationRequires && $inputNew.valid()) || !validationRequires;
-
-            //        if (isRequstValid) {
-            //            var fields = self.concatAdditionalFields($inputNew);
-
-            //            self.sendRequest($div, $inputNew, url, fields);
-            //        }
-            //        if (self.getSettings().focusPersistIfNotValid) {
-            //            self.focusIfnotValid($inputNew);
-            //        }
-            //    }
-            //}
         },
         concatAdditionalFields: function ($input) {
             var addFields = additionalFields.slice();
@@ -802,10 +787,323 @@
                 }
             }
         },
+        search: {
+            plugin: null,
+            currentSearchCategory: 1,
+            noSearch: 1,
+            searchOnPage: 2,
+            searchServer: 3,
+            get: function () {
+                return this.currentSearchCategory;
+            },
+            set: function (category) {
+                this.currentSearchCategory = category;
+            },
+            onPage: function () {
 
+            },
+            init: function () {
+                var plugin = this.plugin,
+                    settings = plugin.getSettings();
+                if (settings.isLiveSearch === false) {
+                    this.set(this.noSearch);
+                } else if (settings.isSearchOnServerSide === false) {
+                    this.set(this.searchServer);
+                } else {
+                    this.set(this.searchOnPage);
+                }
+            }
+        },
         // all methods are create or get method, means create if not exist in efficient manner or else send from cache.
         // only get methods don't create anything only returns the object.
+        ajax: {
+            // only the data from the given url.
+            plugin: null,
+            ajaxRequest: null,
+            abortPrevious: function () {
+                /// <summary>
+                /// Abort previous ajax request and hide all the icons
+                /// </summary>
+                /// <returns type=""></returns>
+                if (!this.plugin.isEmpty(this.ajaxRequest)) {
+                    this.ajaxRequest.abort();
+                }
+            },
+            addClassWhileSending: function () {
+                /// <summary>
+                /// add class while sending or processing the ajax request.
+                /// </summary>
+                var plugin = this.plugin,
+                    $implement = plugin.$implementDiv,
+                    $div = plugin.$element,
+                    settings = plugin.getSettings(),
+                    classes = settings.cssClass;
+                //add
+                plugin.classAddRemove($div, classes.requestSending);
+                plugin.classAddRemove($implement, classes.requestSending);
+            },
+            removeClassAfterSendingRequest: function () {
+                /// <summary>
+                /// remove class after sending or processing the ajax request.
+                /// </summary>
+                var plugin = this.plugin,
+                    $implement = plugin.$implementDiv,
+                    $div = plugin.$element,
+                    settings = plugin.getSettings(),
+                    classes = settings.cssClass;
+                // remove
+                plugin.classAddRemove($div, null, classes.requestSending);
+                plugin.classAddRemove($implement, null, classes.requestSending);
+            },
+            sendRequest: function (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields) {
+                /// <summary>
+                /// Sends the ajax request and binds with done and error methods to route to.
+                /// </summary>
+                /// <param name="plugin">json plugin</param>
+                /// <param name="render">json plugin</param>
+                /// <param name="retrieveData">retrieveData json plugin</param>
+                /// <param name="$div"></param>
+                /// <param name="$implement"></param>
+                /// <param name="url"></param>
+                /// <param name="sendingFields"></param>
+                /// <returns type=""></returns>
+                var method = plugin.getSubmitMethod(),
+                    settings = plugin.getSettings(),
+                    isDebugging = plugin.isDebugging,
+                    events = settings.events,
+                    isCrossDomain = settings.crossDomain,
+                    self = this,
+                    ids = plugin.getIdPrefixes();
+
+
+                // Abort previous ajax request and hide all the icons
+                this.abortPrevious();
+
+                // show spinner only
+                render.icons.showOnlyIcons(ids.spinnerIcon);
+
+
+                this.addClassWhileSending();
+
+                plugin.markAsProcessing($div, true);
+                //plugin.setCurrentTextForNexttimeChecking($div);
+                this.ajaxRequest = jQuery.ajax({
+                    method: method, // by default "GET"
+                    url: url,
+                    //data: sendingFields, // PlainObject or String or Array
+                    crossDomain: isCrossDomain,
+                    dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
+                });
+
+                this.ajaxRequest.done(function (response) {
+                    // stop processing marks
+                    if (isDebugging) {
+                        console.log(response);
+                    }
+                    // show spinner only
+                    retrieveData.process(plugin, render, $div, $implement, $input, response);
+                    render.icons.showOnlyIcons([ids.caretIcon, ids.searchIcon]);
+                });
+
+                this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
+                    //self.hideSpinner($input);
+                    retrieveData.errorProcess(plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url);
+                    console.log("Request failed: " + exceptionMessage + ". Url : " + url);
+                    render.icons.showOnlyIcons(ids.errorIcon);
+                });
+
+                this.ajaxRequest.always(function () {
+                    self.removeClassAfterSendingRequest();
+                    plugin.markAsProcessing($div, false);
+                });
+            }
+        },
+        //contains url methods and pagination.
+        pagination: {
+            setPage: function (pageNumber) {
+
+            },
+            getUrlRegularPaged: function (plugin, settings) {
+                var currentPage = settings.currentPage,
+                    nextUrl = settings.nextPageUrl,
+                    nextPageVariable = settings.pagingVariableName;
+                var newNextPageUrl = nextUrl.replace(nextPageVariable, currentPage);
+                if (plugin.isDebugging) {
+                    console.log("Paged url:");
+                    console.log(newNextPageUrl);
+                }
+                return newNextPageUrl;
+            },
+            getUrlODataPaged: function (plugin, settings) {
+                var currentPage = settings.currentPage,
+                    searchingElements = [],
+                    top = "$top=" + settings.pageSize,
+                    skipNumber = (currentPage - 1) * settings.pageSize,
+                    skip = "$skip=" + skipNumber,
+                    count = "$inlinecount=allpages",
+                    select = "$select=" + settings.displayField + "," + settings.valueField + "," + settings.searchingField,
+                    isPagination = settings.isPaginationEnable;
+
+                if (isPagination) {
+                    searchingElements.push(top);
+                    if (skipNumber > 0) {
+                        searchingElements.push(skip);
+                    }
+                }
+
+                searchingElements.push(count);
+                if (settings.isOptimized) {
+                    searchingElements.push(select);
+                }
+
+                var queryString = searchingElements.join("&");
+
+
+                var newNextPageUrl = settings.url;
+                if (newNextPageUrl[newNextPageUrl.length - 1] !== "?") {
+                    newNextPageUrl += "?";
+                }
+
+                newNextPageUrl += queryString;
+
+
+                if (plugin.isDebugging) {
+                    console.log("Paged url:");
+                    console.log(newNextPageUrl);
+                }
+                return newNextPageUrl;
+            },
+            getUrl: function () {
+                /// <summary>
+                /// Gets the right url based on odata or paged or anything.
+                /// </summary>
+                /// <returns type="">Returns the right url based on odata or paged or anything based on settings.</returns>
+                var plugin = this.plugin,
+                    settings = plugin.getSettings(),
+                    category = plugin.processingCategory;
+
+                var isRegularUrl = category.isRegular(),
+                    isRegularPaged = category.isRegularPaged(),
+                    isOdataOnly = category.isOdata(),
+                    isOdataPaged = category.isOdataPaged();
+
+
+                if (isRegularUrl) {
+                    // retrieve data from direct url.
+                    return settings.url;
+                } else if (isOdataOnly) {
+                    // retrieve data from direct url.
+                    return this.getUrlODataPaged(plugin, settings);
+                } else if (isRegularPaged) {
+                    return this.getUrlRegularPaged(plugin, settings);
+                } else if (isOdataPaged) {
+                    return this.getUrlODataPaged(plugin, settings);
+                    //} else if (isOdataPagedServer) {
+                    //    return this.getUrlODataPagedServer(plugin, settings);
+                }
+
+                return null;
+            }
+        },
+        // route and configure url and then get the data from the url.
+        retrieveData: {
+            plugin: null,
+            getRegularData: function (url) {
+                var plugin = this.plugin,
+                    ajax = plugin.ajax;
+                //ajax.sendRequest()
+            },
+            request: function (plugin, url) {
+                /// <summary>
+                /// Retrieve data as per necessary.
+                /// Decide weather if :
+                /// it is odata then get data by pagination.
+                /// it is also paged data from non odata source also retrieve it.
+                /// Or anything else..
+                /// Route point of getting the data.
+                /// Finally it leads to the next method process
+                /// </summary>
+                /// <param name="url"></param>
+                /// <returns type=""></returns>
+                var ajax = plugin.ajax,
+                    render = plugin.render,
+                    $div = plugin.getDiv(),
+                    $implement = plugin.getImplement(),
+                    $input = render.$input;
+                // (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields)
+                // icons display will be placed inside that ajax send request.
+                ajax.sendRequest(plugin, render, this, $div, $implement, $input, url, null);
+            },
+            setDataInPlugin: function (plugin, data) {
+                /// <summary>
+                /// Sets plugin data and triggers plugin.triggerableEvents.dataPopulated(...) method.
+                /// </summary>
+                /// <param name="plugin"></param>
+                /// <param name="data"></param>
+                /// <returns type=""></returns>
+                plugin.data = data;
+                var $div = plugin.getDiv(),
+                    $implement = plugin.getImplement(),
+                    $inputWrapper = plugin.render.$inputWrapper,
+                    $listWrapper = plugin.render.$listWrapper;
+                plugin.triggerableEvents.dataPopulated(plugin, data, $div, $implement, $inputWrapper, $listWrapper);
+            },
+            process: function (plugin, render, $div, $implement, $input, response) {
+                /// <summary>
+                /// Calls from ajax.sendRequest() when the request is done.
+                /// Calls setDataInPlugin(plugin, response) to set the plugin data.
+                /// Sets data to received data.
+                /// Process the retrieved data.
+                /// </summary>
+                /// <param name="plugin">plugin</param>
+                /// <param name="render">Render json</param>
+                /// <param name="$div">$element</param>
+                /// <param name="$implement">$implement div</param>
+                /// <param name="$input"></param>
+                /// <param name="response"></param>
+                /// <returns type=""></returns>
+
+                var settings = plugin.getSettings(),
+                    category = plugin.processingCategory;
+
+                var isRegularUrl = category.isRegular(),
+                    isRegularPaged = category.isRegularPaged(),
+                    isOdataOnly = category.isOdata(),
+                    isOdataPaged = category.isOdataPaged();
+
+                render.list(plugin, $div, $implement);
+                var data = response;
+                if (isOdataOnly || isOdataPaged) {
+                    settings.totalItemsCountOnServer = response["odata.count"];
+                    data = response["value"];
+                    render.listItems(plugin, data); // clears before populate
+                } else {
+                    render.listItems(plugin, data); // clears before populate
+                }
+                // sets data to plugin.
+                this.setDataInPlugin(plugin, data);
+            },
+            errorProcess: function (plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url) {
+                var code = jqXHR.status,
+                    settings = plugin.getSettings(),
+                    events = settings.events,
+                    msg = "";
+
+                if (code === 0) {
+                    code = 404;
+                    textStatus = "Requested url doesn't lead to a valid request.";
+                }
+                msg = "Code " + code + " : " + textStatus;
+
+
+                if (!plugin.isEmpty(events.onError)) {
+                    events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
+                }
+            }
+        },
         render: {
+            // all methods are create or get method, means create if not exist in efficient manner or else send from cache.
+            // only get methods don't create anything only returns the object.
             plugin: null,
             $inputWrapper: null,
             $input: null,
@@ -1361,297 +1659,9 @@
                     }
                     callback();
                 }, 0);
-                
-            }
-        },
-        ajax: {
-            // only the data from the given url.
-            plugin: null,
-            ajaxRequest: null,
-            abortPrevious: function () {
-                /// <summary>
-                /// Abort previous ajax request and hide all the icons
-                /// </summary>
-                /// <returns type=""></returns>
-                if (!this.plugin.isEmpty(this.ajaxRequest)) {
-                    this.ajaxRequest.abort();
-                }
-            },
-            addClassWhileSending: function () {
-                /// <summary>
-                /// add class while sending or processing the ajax request.
-                /// </summary>
-                var plugin = this.plugin,
-                    $implement = plugin.$implementDiv,
-                    $div = plugin.$element,
-                    settings = plugin.getSettings(),
-                    classes = settings.cssClass;
-                //add
-                plugin.classAddRemove($div, classes.requestSending);
-                plugin.classAddRemove($implement, classes.requestSending);
-            },
-            removeClassAfterSendingRequest: function () {
-                /// <summary>
-                /// remove class after sending or processing the ajax request.
-                /// </summary>
-                var plugin = this.plugin,
-                    $implement = plugin.$implementDiv,
-                    $div = plugin.$element,
-                    settings = plugin.getSettings(),
-                    classes = settings.cssClass;
-                // remove
-                plugin.classAddRemove($div, null, classes.requestSending);
-                plugin.classAddRemove($implement, null, classes.requestSending);
-            },
-            sendRequest: function (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields) {
-                /// <summary>
-                /// Sends the ajax request and binds with done and error methods to route to.
-                /// </summary>
-                /// <param name="plugin">json plugin</param>
-                /// <param name="render">json plugin</param>
-                /// <param name="retrieveData">retrieveData json plugin</param>
-                /// <param name="$div"></param>
-                /// <param name="$implement"></param>
-                /// <param name="url"></param>
-                /// <param name="sendingFields"></param>
-                /// <returns type=""></returns>
-                var method = plugin.getSubmitMethod(),
-                    settings = plugin.getSettings(),
-                    isDebugging = plugin.isDebugging,
-                    events = settings.events,
-                    isCrossDomain = settings.crossDomain,
-                    self = this,
-                    ids = plugin.getIdPrefixes();
 
-
-                // Abort previous ajax request and hide all the icons
-                this.abortPrevious();
-
-                // show spinner only
-                render.icons.showOnlyIcons(ids.spinnerIcon);
-
-
-                this.addClassWhileSending();
-
-                plugin.markAsProcessing($div, true);
-                //plugin.setCurrentTextForNexttimeChecking($div);
-                this.ajaxRequest = jQuery.ajax({
-                    method: method, // by default "GET"
-                    url: url,
-                    //data: sendingFields, // PlainObject or String or Array
-                    crossDomain: isCrossDomain,
-                    dataType: "JSON" //, // "Text" , "HTML", "xml", "script" 
-                });
-
-                this.ajaxRequest.done(function (response) {
-                    // stop processing marks
-                    if (isDebugging) {
-                        console.log(response);
-                    }
-                    // show spinner only
-                    retrieveData.process(plugin, render, $div, $implement, $input, response);
-                    render.icons.showOnlyIcons([ids.caretIcon, ids.searchIcon]);
-                });
-
-                this.ajaxRequest.fail(function (jqXHR, textStatus, exceptionMessage) {
-                    //self.hideSpinner($input);
-                    retrieveData.errorProcess(plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url);
-                    console.log("Request failed: " + exceptionMessage + ". Url : " + url);
-                    render.icons.showOnlyIcons(ids.errorIcon);
-                });
-
-                this.ajaxRequest.always(function () {
-                    self.removeClassAfterSendingRequest();
-                    plugin.markAsProcessing($div, false);
-                });
-            }
-        },
-        //contains url methods and pagination.
-        pagination: {
-            setPage: function (pageNumber) {
-
-            },
-            getUrlRegularPaged: function (plugin, settings) {
-                var currentPage = settings.currentPage,
-                    nextUrl = settings.nextPageUrl,
-                    nextPageVariable = settings.pagingVariableName;
-                var newNextPageUrl = nextUrl.replace(nextPageVariable, currentPage);
-                if (plugin.isDebugging) {
-                    console.log("Paged url:");
-                    console.log(newNextPageUrl);
-                }
-                return newNextPageUrl;
-            },
-            getUrlODataPaged: function (plugin, settings) {
-                var currentPage = settings.currentPage,
-                    searchingElements = [],
-                    top = "$top=" + settings.pageSize,
-                    skipNumber = (currentPage - 1) * settings.pageSize,
-                    skip = "$skip=" + skipNumber,
-                    count = "$inlinecount=allpages",
-                    select = "$select=" + settings.displayField + "," + settings.valueField + "," + settings.searchingField,
-                    isPagination = settings.isPaginationEnable;
-
-                if (isPagination) {
-                    searchingElements.push(top);
-                    if (skipNumber > 0) {
-                        searchingElements.push(skip);
-                    }
-                }
-
-                searchingElements.push(count);
-                if (settings.isOptimized) {
-                    searchingElements.push(select);
-                }
-
-                var queryString = searchingElements.join("&");
-
-
-                var newNextPageUrl = settings.url;
-                if (newNextPageUrl[newNextPageUrl.length - 1] !== "?") {
-                    newNextPageUrl += "?";
-                }
-
-                newNextPageUrl += queryString;
-
-
-                if (plugin.isDebugging) {
-                    console.log("Paged url:");
-                    console.log(newNextPageUrl);
-                }
-                return newNextPageUrl;
-            },
-            getUrl: function () {
-                /// <summary>
-                /// Gets the right url based on odata or paged or anything.
-                /// </summary>
-                /// <returns type="">Returns the right url based on odata or paged or anything based on settings.</returns>
-                var plugin = this.plugin,
-                    settings = plugin.getSettings(),
-                    category = plugin.processingCategory;
-
-                var isRegularUrl = category.isRegular(),
-                    isRegularPaged = category.isRegularPaged(),
-                    isOdataOnly = category.isOdata(),
-                    isOdataPaged = category.isOdataPaged();
-
-
-                if (isRegularUrl) {
-                    // retrieve data from direct url.
-                    return settings.url;
-                } else if (isOdataOnly) {
-                    // retrieve data from direct url.
-                    return this.getUrlODataPaged(plugin, settings);
-                } else if (isRegularPaged) {
-                    return this.getUrlRegularPaged(plugin, settings);
-                } else if (isOdataPaged) {
-                    return this.getUrlODataPaged(plugin, settings);
-                    //} else if (isOdataPagedServer) {
-                    //    return this.getUrlODataPagedServer(plugin, settings);
-                }
-
-                return null;
-            }
-        },
-
-        // route and configure url and then get the data from the url.
-        retrieveData: {
-            plugin: null,
-            getRegularData: function (url) {
-                var plugin = this.plugin,
-                    ajax = plugin.ajax;
-                //ajax.sendRequest()
-            },
-            request: function (plugin, url) {
-                /// <summary>
-                /// Retrieve data as per necessary.
-                /// Decide weather if :
-                /// it is odata then get data by pagination.
-                /// it is also paged data from non odata source also retrieve it.
-                /// Or anything else..
-                /// Route point of getting the data.
-                /// Finally it leads to the next method process
-                /// </summary>
-                /// <param name="url"></param>
-                /// <returns type=""></returns>
-                var ajax = plugin.ajax,
-                    render = plugin.render,
-                    $div = plugin.getDiv(),
-                    $implement = plugin.getImplement(),
-                    $input = render.$input;
-                // (plugin, render, retrieveData, $div, $implement, $input, url, sendingFields)
-                // icons display will be placed inside that ajax send request.
-                ajax.sendRequest(plugin, render, this, $div, $implement, $input, url, null);
-            },
-            setDataInPlugin: function (plugin, data) {
-                /// <summary>
-                /// Sets plugin data and triggers plugin.triggerableEvents.dataPopulated(...) method.
-                /// </summary>
-                /// <param name="plugin"></param>
-                /// <param name="data"></param>
-                /// <returns type=""></returns>
-                plugin.data = data;
-                var $div = plugin.getDiv(),
-                    $implement = plugin.getImplement(),
-                    $inputWrapper = plugin.render.$inputWrapper,
-                    $listWrapper = plugin.render.$listWrapper;
-                plugin.triggerableEvents.dataPopulated(plugin, data, $div, $implement, $inputWrapper, $listWrapper);
-            },
-            process: function (plugin, render, $div, $implement, $input, response) {
-                /// <summary>
-                /// Calls from ajax.sendRequest() when the request is done.
-                /// Calls setDataInPlugin(plugin, response) to set the plugin data.
-                /// Sets data to received data.
-                /// Process the retrieved data.
-                /// </summary>
-                /// <param name="plugin">plugin</param>
-                /// <param name="render">Render json</param>
-                /// <param name="$div">$element</param>
-                /// <param name="$implement">$implement div</param>
-                /// <param name="$input"></param>
-                /// <param name="response"></param>
-                /// <returns type=""></returns>
-
-                var settings = plugin.getSettings(),
-                    category = plugin.processingCategory;
-
-                var isRegularUrl = category.isRegular(),
-                    isRegularPaged = category.isRegularPaged(),
-                    isOdataOnly = category.isOdata(),
-                    isOdataPaged = category.isOdataPaged();
-
-                render.list(plugin, $div, $implement);
-                var data = response;
-                if (isOdataOnly || isOdataPaged) {
-                    settings.totalItemsCountOnServer = response["odata.count"];
-                    data = response["value"];
-                    render.listItems(plugin, data); // clears before populate
-                } else {
-                    render.listItems(plugin, data); // clears before populate
-                }
-                // sets data to plugin.
-                this.setDataInPlugin(plugin, data);
-            },
-            errorProcess: function (plugin, render, $div, $input, jqXHR, textStatus, exceptionMessage, url) {
-                var code = jqXHR.status,
-                    settings = plugin.getSettings(),
-                    events = settings.events,
-                    msg = "";
-
-                if (code === 0) {
-                    code = 404;
-                    textStatus = "Requested url doesn't lead to a valid request.";
-                }
-                msg = "Code " + code + " : " + textStatus;
-
-
-                if (!plugin.isEmpty(events.onError)) {
-                    events.onError($div, $input, jqXHR, textStatus, exceptionMessage, url);
-                }
             }
         }
-
-
     });
 
     $.fn.serverComboBox = function (options) {
