@@ -19,7 +19,7 @@
 
 ; (function ($, window, document, undefined) {
     // Avoid Plugin.prototype conflicts
-    $.fn.serverComboBox = $.serverComboBox || {};
+    console.log($.serverComboBox);
     $.fn.serverComboBox.render = {
         // all methods are create or get method, means create if not exist in efficient manner or else send from cache.
         // only get methods don't create anything only returns the object.
