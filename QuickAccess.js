@@ -1,5 +1,5 @@
 defaults = {
-            crossDomain: true,
+            crossDomain: true, 
             // send request while on request is already being processing.
             multipleRequests: true,
             checkValidationBeforeSendingRequest: true,
