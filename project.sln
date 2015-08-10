@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "jquery-server-validation", "http://localhost:6334", "{4C2EABB3-1A97-4385-88DF-1E94436C128E}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "jquery-server-combo", "http://localhost:6334", "{4C2EABB3-1A97-4385-88DF-1E94436C128E}"
 	ProjectSection(WebsiteProperties) = preProject
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"

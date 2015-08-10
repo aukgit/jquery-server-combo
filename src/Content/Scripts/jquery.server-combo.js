@@ -315,6 +315,7 @@
         data: null,
         currentPageData: null,
         selectedData: null,
+        searchFoundData: null,
         $input: null,
         $implementDiv: null,
         $element: null,
@@ -369,6 +370,12 @@
             return variable === null || variable === undefined || variable.length === 0;
         },
         init: function ($divElement, $implementDiv) {
+            /// <summary>
+            /// Initialize the plugin.
+            /// </summary>
+            /// <param name="$divElement">It is the main container div element.</param>
+            /// <param name="$implementDiv">It is the div where elements are palced inside.</param>
+            /// <returns type=""></returns>
             if (this.isProcessingRequired()) {
                 var css = this.getCssClasses(),
                     render = this.render;
@@ -785,6 +792,24 @@
                     $input.attr("data-selected-value", selectedValue);
                     $input.attr("value", $item.text());
                 }
+            },
+            inputKeypress: function() {
+                var $input = plugin.render.$input,
+                    settings = plugin.getSettings(),
+                    displayField = settings.displayField;
+                var subStringFind = function(text, inputText) {
+                    
+                }
+                $input.on("keypress", function() {
+                    //abc
+                    var data = plugin.data,
+
+                        text = $input.val();
+                    for (var i = 0; i < data.length; i++) {
+                        var row = data[i];
+                        if(row.sub)
+                    }
+                });
             }
         },
         search: {
@@ -1047,6 +1072,8 @@
                     $inputWrapper = plugin.render.$inputWrapper,
                     $listWrapper = plugin.render.$listWrapper;
                 plugin.triggerableEvents.dataPopulated(plugin, data, $div, $implement, $inputWrapper, $listWrapper);
+
+                console.log(plugin.data);
             },
             process: function (plugin, render, $div, $implement, $input, response) {
                 /// <summary>
@@ -1482,7 +1509,7 @@
                 /// </summary>
                 /// <param name="$appendingObject">Object where everything will be added to , not necessarily $appendingObject</param>
                 /// <param name="objectTypeName"></param>
-                /// <param name="$wrappingObject"></param>
+                /// <param name="$wrappingObject">Which $element should be placed inside the wrapper.</param>
                 /// <param name="level">By default level: 2</param>
                 /// <returns type=""></returns>
                 var plugin = this.plugin,
