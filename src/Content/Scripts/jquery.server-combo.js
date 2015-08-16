@@ -155,7 +155,13 @@
                 wrapper3: "third-wrapper-container",
                 wrapper4: "forth-wrapper-container",
                 hiddenClass: "jq-combo-hidden-element",
-                comboSingleItem: "jq-combo-single-item"
+                comboSingleItem: "jq-combo-single-item",
+                oneItem: "one-item",
+                twoItem: "two-item",
+                threeItem: "three-item",
+                fourItem: "four-item",
+                fiveItem: "five-item",
+                sixItem: "six-item"
             },
 
             iconsIdPrefixes: {
@@ -315,7 +321,6 @@
         data: null,
         currentPageData: null,
         selectedData: null,
-        searchFoundData: null,
         $input: null,
         $implementDiv: null,
         $element: null,
@@ -370,12 +375,6 @@
             return variable === null || variable === undefined || variable.length === 0;
         },
         init: function ($divElement, $implementDiv) {
-            /// <summary>
-            /// Initialize the plugin.
-            /// </summary>
-            /// <param name="$divElement">It is the main container div element.</param>
-            /// <param name="$implementDiv">It is the div where elements are palced inside.</param>
-            /// <returns type=""></returns>
             if (this.isProcessingRequired()) {
                 var css = this.getCssClasses(),
                     render = this.render;
@@ -406,11 +405,6 @@
                     this.classAddRemove($divElement, css.comboSingleItem);
                 }
                 $divElement.attr("data-style", css.styleSetName);
-
-
-
-
-
 
                 var $input = render.$input,
                     $inputWrapper = render.$inputWrapper;
@@ -725,9 +719,10 @@
                 }
             ).click(function () {
                 triggerableEvents.caretClick(self, $div, $implement, $inputWrapper, $input, $caretWrapper, render);
-
             });
 
+            triggerableEvents.inputKeyPress(self, $input, $div, $implement, render);
+       
         },
         triggerableEvents: {
             plugin: null,
@@ -793,23 +788,47 @@
                     $input.attr("value", $item.text());
                 }
             },
-            inputKeypress: function() {
-                var $input = plugin.render.$input,
-                    settings = plugin.getSettings(),
-                    displayField = settings.displayField;
-                var subStringFind = function(text, inputText) {
-                    
-                }
-                $input.on("keypress", function() {
-                    //abc
-                    var data = plugin.data,
+            inputKeyPress: function (plugin, $input, $div, $implement, render) {
 
-                        text = $input.val();
+                var data = plugin.data,
+                    settings = plugin.getSettings(),
+                    category = plugin.processingCategory,
+                    displayField = settings.displayField,
+                    foundData = [],
+                typingTimer = null;
+
+                //on keyup, start the countdown
+                $input.keypress(function () {
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(function () {
+
+                    }, 500);
+                }).keydown(function () {
+                    //on keydown, clear the countdown 
+                    clearTimeout(typingTimer);
+                });
+
+                console.log(searchText);
+                // category.isRegular() && ( need to more investigation on it)
+                if (settings.isSearchOnServerSide === false) {
                     for (var i = 0; i < data.length; i++) {
                         var row = data[i];
-                        if(row.sub)
+                        if (row[displayField].toLowerCase().search(searchText) > -1) {
+                            foundData.push(row);
+                        }
                     }
-                });
+                }
+
+                // Hide the existing wrapper of list
+                var $wrapper = render.getWrapper("list", 1);
+                $wrapper.hide();
+                render.$list = null;
+
+                //Create a new wrapper of list and show the found data 
+                render.list(plugin, $div, $implement, "searchData");
+                render.listItems(plugin, foundData);
+
+                // Can i create a new class for wrapperType
             }
         },
         search: {
@@ -1072,8 +1091,6 @@
                     $inputWrapper = plugin.render.$inputWrapper,
                     $listWrapper = plugin.render.$listWrapper;
                 plugin.triggerableEvents.dataPopulated(plugin, data, $div, $implement, $inputWrapper, $listWrapper);
-
-                console.log(plugin.data);
             },
             process: function (plugin, render, $div, $implement, $input, response) {
                 /// <summary>
@@ -1098,7 +1115,7 @@
                     isOdataOnly = category.isOdata(),
                     isOdataPaged = category.isOdataPaged();
 
-                render.list(plugin, $div, $implement);
+                render.list(plugin, $div, $implement, "list");
                 var data = response;
                 if (isOdataOnly || isOdataPaged) {
                     settings.totalItemsCountOnServer = response["odata.count"];
@@ -1509,7 +1526,7 @@
                 /// </summary>
                 /// <param name="$appendingObject">Object where everything will be added to , not necessarily $appendingObject</param>
                 /// <param name="objectTypeName"></param>
-                /// <param name="$wrappingObject">Which $element should be placed inside the wrapper.</param>
+                /// <param name="$wrappingObject"></param>
                 /// <param name="level">By default level: 2</param>
                 /// <returns type=""></returns>
                 var plugin = this.plugin,
@@ -1580,7 +1597,7 @@
                 }
                 return $divWrapper1;
             },
-            list: function (plugin, $div, $implement) {
+            list: function (plugin, $div, $implement, wraperType) {
                 /// <summary>
                 /// Renders and gets the $list (unordered list by the given data)
                 /// Calls from retriveData json's get method.
@@ -1589,10 +1606,10 @@
                 var cssClass = plugin.getCssClasses(),
                     ids = plugin.getIdPrefixes(),
                     id = plugin.getID(),
-                    finalId = ids.list + id,
+                    finalId = ids.list + wraperType + id,
                     events = plugin.getEvents(),
                     wrapperClass = cssClass.listDisplayWrapper,
-                    typeObject = "list";
+                    typeObject = wraperType;
 
                 var elementName = "$list",
                     $elem = this[elementName];
@@ -1656,6 +1673,32 @@
                 var callback = function () {
                     var ulContents = arrayList.join("");
                     $list.html(ulContents);
+
+                    if (len < 7) {
+
+                        var className = "";
+
+                        if (len === 1) {
+                            className = cssClass.oneItem;
+                        }
+                        else if (len === 2) {
+                            className = cssClass.twoItem;
+                        }
+                        else if (len === 3) {
+                            className = cssClass.threeItem;
+                        }
+                        else if (len === 4) {
+                            className = cssClass.fourItem;
+                        }
+                        else if (len === 5) {
+                            className = cssClass.fiveItem;
+                        }
+                        else if (len === 6) {
+                            className = cssClass.sixItem;
+                        }
+
+                        $list.attr("class", $list.attr("class") + className);
+                    }
 
                     var $listItems = $list.find("li");
                     $listItems.on("click", function (evt) {
